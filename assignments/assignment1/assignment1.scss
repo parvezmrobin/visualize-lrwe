@@ -1,0 +1,63 @@
+$teal: #41999A;
+$indigo: #2E469C;
+
+svg {
+  background-image: url("/assignment1/background.jpg");
+  background-size: cover;
+}
+
+#header text {
+  fill: white;
+
+  &.line1 {
+    font-size: 22px;
+    transform: translate(18px, 50px);
+  }
+
+  &.line2 {
+    font-size: 26px;
+    font-weight: 700;
+    transform: translate(18px, 80px);
+  }
+
+  &.description {
+    font-size: 12px;
+    transform: translate(20px, 110px);
+  }
+
+  &.date {
+    font-size: 12px;
+    transform: translate(20px, 128px);
+
+    .th {
+      font-size: 8px;
+    }
+  }
+
+  &.info-link {
+    font-size: 12px;
+    transform: translate(20px, 145px);
+
+    .link {
+      fill: #0564C2;
+    }
+  }
+
+  &.logo {
+    font-size: 24px;
+    font-weight: bolder;
+    transform: translate(720px, 58px);
+  }
+}
+
+#header-strip {
+  line, path {
+    &#teal {
+      fill: $teal;
+    }
+
+    &#indigo {
+      fill: $indigo;
+    }
+  }
+}
