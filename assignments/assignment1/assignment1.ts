@@ -4,10 +4,10 @@ import '../src/style.css';
 import './assignment1.scss';
 
 
-// For Cell 1-1
 import './cell11';
 import './cell12';
 import './cell21';
+import './cell31';
 import './cell32';
 
 const modalDiv = document.createElement('div');
