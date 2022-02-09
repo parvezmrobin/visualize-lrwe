@@ -135,6 +135,7 @@ const scaleY = (function drawYAxis() {
 
 (function drawLines() {
   const blueLine = d3.line<typeof data[number]>()
+    .curve(d3.curveCardinal)
     .x(d => scaleX(new Date(d.date)))
     .y(d => scaleY(d.value[0]));
   group11Viz.append('path')
@@ -145,6 +146,7 @@ const scaleY = (function drawYAxis() {
     .attr('d', blueLine);
 
   const tealLine = d3.line<typeof data[number]>()
+    .curve(d3.curveCardinal)
     .x(d => scaleX(new Date(d.date)))
     .y(d => scaleY(d.value[1]));
   group11Viz.append('path')
@@ -205,7 +207,7 @@ drawText(
   'deal with those who are ill as a result of getting the Coronavirus?',
   BLUE,
   visMargin.left - 35,
-  visMargin.top + 10,
+  visMargin.top + 12,
   '9px',
 );
 
