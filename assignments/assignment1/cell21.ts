@@ -165,6 +165,6 @@ for (let i = 0; i < data.length; i++) {
 }
 
 group21.append('image')
-  .attr('href', '/assignment1/assets/right-arrow.svg')
+  .attr('href', '/assignment1/right-arrow.svg')
   .style('height', '55px')
   .style('transform', 'translate(340px, 55px) rotate(150deg)');

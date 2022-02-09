@@ -147,6 +147,6 @@ for (let line of visDescriptionLines) {
 }
 
 group32.append('image')
-  .attr('href', '/assignment1/assets/watch.svg')
+  .attr('href', '/assignment1/watch.svg')
   .style('height', '95px')
   .style('transform', 'translate(127px, 15px)');

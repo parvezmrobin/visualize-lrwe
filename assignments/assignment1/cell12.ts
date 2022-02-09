@@ -70,7 +70,7 @@ const images = [[40, 'blue'], [40, 'teal'], [60, 'darkblue']] as const;
 for (let i = 0; i < images.length; i++) {
   let [h, color] = images[i];
   group21Viz.append('image')
-    .attr('href', `/assignment1/assets/person-${color}.svg`)
+    .attr('href', `/assignment1/person-${color}.svg`)
     .style('height', `${h}px`)
     .style('transform', `translate(${i * 100}px, ${35 - h}px)`);
 }
@@ -117,7 +117,7 @@ for (let j = 0; j < descriptionLines.length; j++){
 
 for (let i = 0; i < 2; i++) {
   group21Viz.append('image')
-    .attr('href', `/assignment1/assets/right-arrow-thick.svg`)
+    .attr('href', `/assignment1/right-arrow-thick.svg`)
     .style('height', `22px`)
     .style('transform', `translate(${i * 100 + 80}px, 45px)`);
 }
