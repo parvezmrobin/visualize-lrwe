@@ -128,10 +128,10 @@ const scaleX = (function drawXAxis() {
     new Date('7 Feb 2020'),
     new Date('16 Apr 2020'),
     new Date('11 June 2020'),
-    new Date('27 Aug 2021'),
-    new Date('22 Oct 2021'),
-    new Date('17 Dec 2021'),
-    new Date('11 Mar 2021'),
+    new Date('27 Aug 2020'),
+    new Date('22 Oct 2020'),
+    new Date('17 Dec 2020'),
+    new Date('11 Mar 2020'),
   ];
 
   function formatDate(d: Date): string {
