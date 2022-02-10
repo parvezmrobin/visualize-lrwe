@@ -7,6 +7,7 @@ import './assignment1.scss';
 import './cell11';
 import './cell12';
 import './cell21';
+import './cell22';
 import './cell31';
 import './cell32';
 
@@ -85,6 +86,7 @@ inputElement.addEventListener('click', e => {
 inputElement.addEventListener('input', () => {
   if (currentTarget === undefined) {
     console.error('Current target is empty on color input');
+    return;
   }
-  currentTarget?.attr(colorAttr, inputElement.value);
+  currentTarget.attr(colorAttr, inputElement.value);
 });
