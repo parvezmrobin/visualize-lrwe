@@ -1,7 +1,11 @@
 import * as d3 from 'd3';
 import {
   BLUE,
+  drawCellSubtitle,
+  drawCellTitle,
+  drawVisDescription,
   GREY,
+  makeDrawText,
   svg,
   TEAL,
 } from './util';
@@ -157,59 +161,28 @@ const scaleY = (function drawYAxis() {
     .attr('d', tealLine);
 })();
 
-function drawText(
-  text: string, color: string, x: number, y: number, fontSize: string,
-): d3.Selection<SVGTextElement, unknown, HTMLElement, any> {
-  return group11.append('text')
-    .text(text)
-    .attr('fill', color)
-    .style('font-size', fontSize)
-    .style('transform', `translate(${x}px, ${y}px)`);
-}
+const drawText = makeDrawText(group11);
 
-for (const line of [['PLANNING NHS', 15], ['RESPONSE', 30]] as const) {
-  const [text, y] = line;
-  drawText(
-    text,
-    'white',
-    10,
-    y,
-    '14px',
-  ).style('font-weight', '700');
-}
-
+drawCellTitle([['PLANNING NHS', 15], ['RESPONSE', 30]], drawText);
 const lines = [
   ['Confidence in the', 45],
   ['NHS is at its highest', 60],
   ['since June 2020', 75],
 ] as const;
 
-for (const line of lines) {
-  const [text, y] = line;
-  drawText(
-    text,
-    'white',
-    10,
-    y,
-    '11px',
-  );
-}
+drawCellSubtitle(lines, drawText);
 
-drawText(
+const visDescriptions = [
   'How confident, if at all, would you say you are in the ability of the NHS to',
-  BLUE,
+  'deal with those who are ill as a result of getting the Coronavirus?',
+];
+drawVisDescription(
+  visDescriptions,
   visMargin.left - 35,
-  visMargin.top,
-  '9px',
+  (i) => visMargin.top + i * 12,
+  drawText,
 );
 
-drawText(
-  'deal with those who are ill as a result of getting the Coronavirus?',
-  BLUE,
-  visMargin.left - 35,
-  visMargin.top + 12,
-  '9px',
-);
 
 drawText(
   'Mar 2020 — Feb 2021',

@@ -4,6 +4,7 @@ import {
   drawBackDrop,
   drawCellSubtitle,
   drawCellTitle,
+  drawMonthDateAxisBottom,
   drawVisDescription,
   makeDrawText,
   svg,
@@ -109,7 +110,7 @@ const visWidth = 280;
 const visHeight = 160;
 const visAxisPadding = { left: 15, bottom: 95 };
 
-const group11Viz = cell22
+const cell22Vis = cell22
   .append('g')
   .attr('id', 'vis11')
   .style('transform', `translate(${visMargin.left}px, ${visMargin.top}px)`);
@@ -134,29 +135,14 @@ const scaleX = (function drawXAxis() {
     new Date('11 Mar 2020'),
   ];
 
-  function formatDate(d: Date): string {
-    return (d as Date)
-      .toDateString()
-      .split(' ')
-      .filter((_, i) => i && i < 3)
-      .join(' ');
-  }
-
-  const tickFormat = (d: Date | d3.NumberValue) => {
-    const startDate = new Date(d as number);
-    return formatDate(startDate);
-  };
-  const axisX = d3.axisBottom(scaleX)
-    .tickSize(0)
-    .tickValues(tickValues)
-    .tickFormat(tickFormat);
-  const xAxis = group11Viz.append('g')
-    .attr('transform', `translate(0, ${visHeight - visAxisPadding.bottom + 20})`)
-    .call(axisX);
-  xAxis.select('.domain').remove();
-  xAxis.selectAll('text')
-    .style('font-size', '7px')
-    .style('font-weight', 'bold');
+ const xAxis =                                                                                                                                                                                                                                                          drawMonthDateAxisBottom(
+   cell22,
+   scaleX,
+   tickValues,
+   0,
+   visHeight - visAxisPadding.bottom + 20,
+   BLUE,
+ );
 
   xAxis.selectAll('text')
     .each((_, index, groups) => {
@@ -183,7 +169,7 @@ function drawLines(data: Datum[], color: string) {
     .curve(d3.curveMonotoneX)
     .x(d => scaleX(new Date(d.date)))
     .y(d => scaleY(d.value));
-  group11Viz.append('path')
+  cell22Vis.append('path')
     .datum(data)
     .attr('fill', 'none')
     .attr('stroke', color)

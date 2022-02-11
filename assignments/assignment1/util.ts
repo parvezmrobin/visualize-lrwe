@@ -66,3 +66,36 @@ export function drawVisDescription(descriptions: string[], x: number, yExpr: (i:
     // .attr('xml:space', 'preserve');
   }
 }
+
+export function formatDate(d: Date): string {
+  return (d as Date)
+    .toDateString()
+    .split(' ')
+    .filter((_, i) => i && i < 3)
+    .join(' ');
+}
+
+export function drawMonthDateAxisBottom(
+  cell: d3.Selection<SVGGElement, unknown, HTMLElement, any>,
+  scaleX: d3.ScaleTime<number, number>, tickValues: Date[],
+  x: number,
+  y: number,
+  color: string,
+): d3.Selection<SVGGElement, unknown, HTMLElement, any> {
+  const tickFormat = (d: Date | d3.NumberValue) => {
+    const startDate = new Date(d as number);
+    return formatDate(startDate);
+  };
+  const axisX = d3.axisBottom(scaleX)
+    .tickSize(0)
+    .tickValues(tickValues)
+    .tickFormat(tickFormat);
+  const xAxis = cell.append('g')
+    .attr('transform', `translate(${x}, ${y})`)
+    .call(axisX);
+  xAxis.selectAll('text')
+    .style('color', color)
+    .style('font-size', '7px')
+    .style('font-weight', 'bold');
+  return xAxis;
+}

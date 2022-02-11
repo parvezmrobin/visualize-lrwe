@@ -23,13 +23,13 @@ const d3Modal = d3.select(modalDiv)
   .style('border-radius', '2px')
   .style('background-color', '#2B547E')
   .attr('hidden', 'hidden');
+const inputElement = d3Modal.append('input')
+  .attr('type', 'color')
+  .node() as HTMLInputElement;
 d3Modal.append('label')
   .text('Choose a color')
   .style('color', 'white')
   .style('padding-right', '5px');
-const inputElement = d3Modal.append('input')
-  .attr('type', 'color')
-  .node() as HTMLInputElement;
 
 let isModalHidden = true;
 let currentTarget: d3.Selection<SVGElement, unknown, null, undefined> | undefined;

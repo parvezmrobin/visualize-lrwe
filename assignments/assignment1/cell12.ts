@@ -1,7 +1,10 @@
-import * as d3 from 'd3';
 import {
   BLUE,
+  drawCellSubtitle,
+  drawCellTitle,
+  drawVisDescription,
   GREY,
+  makeDrawText,
   svg,
   TEAL,
 } from './util';
@@ -29,42 +32,28 @@ const group21Viz = group12
   .style('transform', `translate(${visMargin.left}px, ${visMargin.top}px)`);
 
 
-function drawText(
-  text: string, color: string, x: number, y: number, fontSize: string,
-): d3.Selection<SVGTextElement, unknown, HTMLElement, any> {
-  return group12.append('text')
-    .text(text)
-    .attr('fill', color)
-    .style('font-size', fontSize)
-    .style('transform', `translate(${x}px, ${y}px)`);
-}
+const drawText = makeDrawText(group12);
 
-for (const line of [['HOME TESTING', 0], ['STUDY', 15]] as const) {
-  const [text, y] = line;
-  drawText(text, 'white', 5, y, '14px')
-    .style('font-weight', '700');
-}
-
+drawCellTitle([['HOME TESTING', 0], ['STUDY', 15]], drawText);
 const headerDescription = [
   'The largest testing',
   'programme for',
   'coronavirus shows a',
   'decline in prevalence',
   'of the virus',
-];
+].map((s, i) => [s, 45 + 15 * i] as const);
 
-for (let i = 0; i < headerDescription.length; i++) {
-  const line = headerDescription[i];
-  drawText(line, 'white', 5, i * 13 + 30, '11px');
-}
+drawCellSubtitle(headerDescription, drawText);
 
 const visDescriptionLines = [
-  ['COVID-19 home testing study over time', 0],
-] as const;
-for (let line of visDescriptionLines) {
-  const [text, y] = line;
-  drawText(text, BLUE, 135, y - 5, '9px');
-}
+  'COVID-19 home testing study over time',
+];
+drawVisDescription(
+  visDescriptionLines,
+  135,
+  () => 0,
+  drawText
+)
 
 const images = [[40, 'blue'], [40, 'teal'], [60, 'darkblue']] as const;
 for (let i = 0; i < images.length; i++) {

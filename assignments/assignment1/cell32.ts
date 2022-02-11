@@ -1,19 +1,23 @@
 import * as d3 from 'd3';
 import {
   BLUE,
+  drawCellSubtitle,
+  drawCellTitle,
+  drawVisDescription,
   GREY,
+  makeDrawText,
   svg,
 } from './util';
 
 
 const cell21Margin = { top: 585, right: 30, bottom: 30, left: 468 };
 
-const group32 = svg.select<SVGGElement>('g#cell32')
+const cell32 = svg.select<SVGGElement>('g#cell32')
   .style('transform', `translate(${cell21Margin.left}px, ${cell21Margin.top}px)`);
-console.assert(!group32.empty());
+console.assert(!cell32.empty());
 
 // add backdrop
-group32.append('rect')
+cell32.append('rect')
   .attr('x', 128)
   .attr('y', -18)
   .attr('width', 317)
@@ -24,7 +28,7 @@ const visMargin = { left: 255, top: 20 };
 const visHeight = 130;
 const visWidth = 140;
 
-const group21Viz = group32
+const cell32Vis = cell32
   .append('g')
   .attr('id', 'vis21')
   .style('transform', `translate(${visMargin.left}px, ${visMargin.top}px)`);
@@ -61,7 +65,7 @@ const yAxis = d3.axisLeft<string>(yScale)
   .tickSize(0);
 
 // add y labels
-const yAxisEl = group21Viz.append('g')
+const yAxisEl = cell32Vis.append('g')
   .attr('class', 'y-axis')
   .call(yAxis);
 yAxisEl.select('.domain').remove();
@@ -85,7 +89,7 @@ yAxisEl.selectAll('text')
     }
   })
 
-const bars = group21Viz.selectAll('.bar')
+const bars = cell32Vis.selectAll('.bar')
   .data(data)
   .enter()
   .append('g');
@@ -109,21 +113,9 @@ bars.append('text')
   .style('font-size', '14px')
   .style('alignment-baseline', 'middle');
 
-function drawText(
-  text: string, color: string, x: number, y: number, fontSize: string,
-): d3.Selection<SVGTextElement, unknown, HTMLElement, any> {
-  return group32.append('text')
-    .text(text)
-    .attr('fill', color)
-    .style('font-size', fontSize)
-    .style('transform', `translate(${x}px, ${y}px)`);
-}
+const drawText = makeDrawText(cell32);
 
-for (const line of [['OUTLOOK', 0]] as const) {
-  const [text, y] = line;
-  drawText(text, 'white', 5, y, '14px')
-    .style('font-weight', '700');
-}
+drawCellTitle([['OUTLOOK', 0]], drawText);
 
 const headerDescription = [
   ['One year on, the', 45],
@@ -132,21 +124,20 @@ const headerDescription = [
   ['return to normal', 90],
 ] as const;
 
-for (const line of headerDescription) {
-  const [text, y] = line;
-  drawText(text, 'white', 5, y - 28, '11px');
-}
+drawCellSubtitle(headerDescription, drawText);
 
 const visDescriptionLines = [
-  ['How long do you thing it will take before things feel like they are getting', 0],
-  ['back to normal?', 12]
-] as const;
-for (let line of visDescriptionLines) {
-  const [text, y] = line;
-  drawText(text, BLUE, 135, y - 5, '9px');
-}
+  'How long do you thing it will take before things feel like they are getting',
+  'back to normal?',
+];
+drawVisDescription(
+  visDescriptionLines,
+  135,
+  (i) => i * 12 - 5,
+  drawText,
+)
 
-group32.append('image')
+cell32.append('image')
   .attr('href', '/assignment1/watch.svg')
   .style('height', '95px')
   .style('transform', 'translate(127px, 15px)');

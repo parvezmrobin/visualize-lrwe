@@ -1,6 +1,8 @@
 import * as d3 from 'd3';
 import {
   BLUE,
+  drawMonthDateAxisBottom,
+  formatDate,
   GREY,
   svg,
   TEAL,
@@ -125,30 +127,7 @@ const scaleX = (function drawXAxis() {
     new Date('Jan 28 2021'),
     new Date('Mar 11 2021'),
   ];
-
-  function formatDate(d: Date): string {
-    return (d as Date)
-      .toDateString()
-      .split(' ')
-      .filter((_, i) => i && i < 3)
-      .join(' ');
-  }
-
-  const tickFormat = (d: Date | d3.NumberValue) => {
-    const startDate = new Date(d as number);
-    return formatDate(startDate);
-  };
-  const axisX = d3.axisBottom(scaleX)
-    .tickSize(0)
-    .tickValues(tickValues)
-    .tickFormat(tickFormat);
-  const xAxis = group11Viz.append('g')
-    .attr('transform', `translate(0, ${visHeight - visAxisPadding.bottom + 20})`)
-    .call(axisX);
-  xAxis.selectAll('text')
-    .style('color', BLUE)
-    .style('font-size', '7px')
-    .style('font-weight', 'bold');
+  const xAxis = drawMonthDateAxisBottom(group11Viz, scaleX, tickValues, 0, visHeight - visAxisPadding.bottom + 20, BLUE);
 
   xAxis.selectAll('text')
     .each((_, index, groups) => {
