@@ -4,6 +4,14 @@
 The code for this assignment can be found under the
 `assignment1` directory.
 The `public` directory contains the static assets.
+
+The scripts are quite modular. They are divided into separate
+files to maintain separation of concern.
+I tried my best to write self-explanatory code, but
+in cases I feel so - I added necessary comments as well.
+Also, logically related codes are grouped into IIFE
+with appropriate naming.
+
 The scripts are written in TypeScript and styles in SASS.
 Therefore, they need appropriate tool support to run.
 In the following section, I will demonstrate several ways
