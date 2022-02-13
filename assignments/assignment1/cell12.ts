@@ -41,7 +41,7 @@ const headerDescription = [
   'coronavirus shows a',
   'decline in prevalence',
   'of the virus',
-].map((s, i) => [s, 45 + 15 * i] as const);
+].map((s, i) => [s, 30 + 15 * i] as const);
 
 drawCellSubtitle(headerDescription, drawText);
 

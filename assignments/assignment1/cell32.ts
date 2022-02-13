@@ -118,10 +118,10 @@ const drawText = makeDrawText(cell32);
 drawCellTitle([['OUTLOOK', 0]], drawText);
 
 const headerDescription = [
-  ['One year on, the', 45],
-  ['public is still divided', 60],
-  ['on when things will', 75],
-  ['return to normal', 90],
+  ['One year on, the', 15],
+  ['public is still divided', 30],
+  ['on when things will', 45],
+  ['return to normal', 60],
 ] as const;
 
 drawCellSubtitle(headerDescription, drawText);

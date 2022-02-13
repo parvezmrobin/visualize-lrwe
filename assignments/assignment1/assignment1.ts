@@ -33,9 +33,9 @@ d3Modal.append('label')
 
 let isModalHidden = true;
 let currentTarget: d3.Selection<SVGElement, unknown, null, undefined> | undefined;
-let colorAttr: 'fill' | 'stroke';
+let colorAttr: 'fill' | 'stroke' | 'style';
 
-d3.selectAll(':not([fill],[stroke],input)')
+d3.selectAll(':not([fill],[stroke],input,text,tspan)')
   .on('click', (e) => {
     e.stopPropagation();
     if (isModalHidden) {
@@ -45,21 +45,23 @@ d3.selectAll(':not([fill],[stroke],input)')
     d3Modal.attr('hidden', 'hidden');
     isModalHidden = true;
     currentTarget = undefined;
-  })
+  });
 
-d3.selectAll('[fill],[stroke]')
+d3.selectAll('[fill],[stroke],text,tspan')
   .on('click', (e: MouseEvent) => {
     e.stopPropagation();
     const targetEl = e.target as SVGElement;
     const fillColor = targetEl.getAttribute('fill');
     const strokeColor = targetEl.getAttribute('stroke');
     if (fillColor && fillColor !== 'none') {
+      // for some reason `d3.attr('value', value)` doesn't work
       inputElement.value = fillColor;
-      // d3Input.attr('value', fillColor);
       colorAttr = 'fill';
+    } else if (['text', 'tspan'].includes(targetEl.tagName)) {
+      inputElement.value = 'white';
+      colorAttr = 'style';
     } else if (strokeColor && strokeColor !== 'none') {
       inputElement.value = strokeColor;
-      // d3Input.attr('value', strokeColor);
       colorAttr = 'stroke';
     } else {
       return;
@@ -81,12 +83,16 @@ d3.selectAll('[fill],[stroke]')
 
 inputElement.addEventListener('click', e => {
   e.stopPropagation();
-})
+});
 
 inputElement.addEventListener('input', () => {
   if (currentTarget === undefined) {
     console.error('Current target is empty on color input');
     return;
   }
-  currentTarget.attr(colorAttr, inputElement.value);
+  if (colorAttr === 'style') {
+    currentTarget.style('fill', inputElement.value);
+  } else {
+    currentTarget.attr(colorAttr, inputElement.value);
+  }
 });

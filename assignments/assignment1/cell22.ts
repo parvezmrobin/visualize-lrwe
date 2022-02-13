@@ -198,9 +198,9 @@ const drawText = makeDrawText(cell22);
 drawCellTitle([['THREAT', 15]], drawText);
 
 const lines = [
-  ['The proportion saying', 45],
-  ['that things feel out of', 60],
-  ['control is falling fast', 75],
+  ['The proportion saying', 30],
+  ['that things feel out of', 45],
+  ['control is falling fast', 60],
 ] as const;
 
 drawCellSubtitle(lines, drawText);
