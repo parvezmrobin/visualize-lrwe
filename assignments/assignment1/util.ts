@@ -72,6 +72,7 @@ export function formatDate(d: Date): string {
     .toDateString()
     .split(' ')
     .filter((_, i) => i && i < 3)
+    .map(v => v.startsWith('0') ? v.substring(1) : v)
     .join(' ');
 }
 

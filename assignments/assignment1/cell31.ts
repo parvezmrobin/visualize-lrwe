@@ -101,7 +101,7 @@ cell31.append('rect')
   .attr('fill', GREY);
 
 const visMargin = { left: 130, top: 65 };
-const visWidth = 280;
+const visWidth = 300;
 const visHeight = 160;
 const visAxisPadding = { left: 15, bottom: 95 };
 
@@ -117,7 +117,7 @@ const scaleX = (function drawXAxis() {
       new Date(Math.min(...data.map(d => d.date.valueOf()))),
       new Date(Math.max(...data.map(d => d.date.valueOf()))),
     ])
-    .range([visAxisPadding.left, visWidth]);
+    .range([visAxisPadding.left, visWidth - 10]);
 
 
   const tickValues = [
@@ -127,14 +127,28 @@ const scaleX = (function drawXAxis() {
     new Date('Jan 28 2021'),
     new Date('Mar 11 2021'),
   ];
-  const xAxis = drawMonthDateAxisBottom(group11Viz, scaleX, tickValues, 0, visHeight - visAxisPadding.bottom + 20, BLUE);
+  const xAxis = drawMonthDateAxisBottom(
+    group11Viz,
+    scaleX,
+    tickValues,
+    -2,
+    visHeight - visAxisPadding.bottom + 20,
+    BLUE,
+  );
+
+  // manually increasing the axis length to match the reference
+  xAxis.select('.domain').style('transform', 'translateX(-15px) scaleX(1.1)')
+    .style('stroke', '#D9D9D9');
 
   xAxis.selectAll('text')
     .each((_, index, groups) => {
       const textEl = groups[index] as SVGTextElement;
       const startDate = new Date(textEl.textContent as string);
-      textEl.textContent += ' -';
       const endDate = new Date(startDate.setDate(startDate.getDate() + 4));
+      if (textEl.textContent === 'Oct 8') {
+        endDate.setDate(endDate.getDate() + 1)
+      }
+      textEl.textContent += ' -';
       d3.select(textEl.parentNode as SVGElement)
         .append('text')
         .text(formatDate(endDate))
@@ -226,9 +240,9 @@ drawText(
 const valueLabels = [
   ['57%', -10, 125],
   ['79%', 55, 60],
-  ['62%', 120, 115],
-  ['78%', 180, 62],
-  ['50%', 250, 120],
+  ['62%', 128, 115],
+  ['78%', 195, 62],
+  ['50%', 265, 120],
 ] as const;
 
 for (let valueLabel of valueLabels) {

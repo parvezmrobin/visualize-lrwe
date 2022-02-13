@@ -54,7 +54,9 @@ const country_threat_data: Datum[] = values_from_matrix.map((value, i) => {
 
   return { date, value };
 });
-console.log(country_threat_data);
+// could not retrieve the teal values as white pixels
+// also contain large green and blue pixels.
+// Therefore, simulating.
 const self_threat_data: Datum[] = country_threat_data.map(({ date, value }) => ({
   date,
   value: value + 60,
