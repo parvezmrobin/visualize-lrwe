@@ -29,7 +29,7 @@ const inputElement = d3Modal.append('input')
 d3Modal.append('label')
   .text('Choose a color')
   .style('color', 'white')
-  .style('padding-right', '5px');
+  .style('padding-left', '5px');
 
 let isModalHidden = true;
 let currentTarget: d3.Selection<SVGElement, unknown, null, undefined> | undefined;
