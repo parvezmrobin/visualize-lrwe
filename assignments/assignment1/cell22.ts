@@ -11,92 +11,54 @@ import {
   TEAL,
 } from './util';
 
+/**
+ * As this curve is too complex, it was hard to guess the values.
+ * Thus, I took a screenshot of the graph and read it as matrix
+ * (with matplotlib python library). For each column in the matrix,
+ * I find the index of the maximum value for blue.
+ * @type {number[]}
+ */
+const values_from_matrix = [
+  68, 66, 64, 62, 60, 58, 57, 56, 55, 54,
+  52, 48, 42, 38, 30, 29, 28, 27, 26, 22, 20, 17, 10, 4, 4, 4, 4,
+  4, 4, 5, 6, 6, 5, 6, 5, 10, 11, 8, 9, 10, 10, 10, 10, 10,
+  11, 15, 15, 15, 12, 15, 16, 15, 14, 16, 17, 19, 20, 21, 21, 21, 22,
+  22, 22, 19, 19, 23, 20, 20, 20, 20, 20, 20, 20, 20, 20, 23, 22, 21,
+  21, 21, 30, 22, 22, 23, 24, 28, 29, 26, 27, 27, 27, 27, 27, 30, 26,
+  26, 29, 29, 30, 31, 28, 32, 29, 30, 30, 29, 28, 28, 31, 25, 29, 23,
+  23, 21, 21, 21, 20, 23, 22, 22, 21, 20, 19, 22, 23, 20, 20, 24, 24,
+  20, 20, 19, 22, 22, 22, 18, 18, 18, 18, 17, 18, 17, 17, 17, 17, 17,
+  18, 18, 19, 19, 23, 20, 20, 23, 23, 24, 21, 21, 21, 21, 21, 24, 23,
+  19, 18, 18, 17, 20, 16, 15, 15, 14, 13, 16, 15, 11, 10, 9, 9, 8, 11,
+  7, 7, 7, 7, 8, 8, 9, 9, 10, 11, 11, 13, 14, 15,
+  16, 17, 18, 19, 20, 22, 23, 25, 26, 27, 28, 29, 30, 31, 31, 31, 31,
+  32, 32,
+];
+
 type Datum = {
   date: Date,
   value: number,
 }
-const country_threat_data: Datum[] = [
-  {
-    'date': new Date('27 Aug 2020'),
-    'value': 57,
-  },
-  {
-    'date': new Date('24 Sep 2020'),
-    'value': 77,
-  },
-  {
-    'date': new Date('1 Oct 2020'),
-    'value': 77,
-  },
-  {
-    'date': new Date('8 Oct 2020'),
-    'value': 78,
-  },
-  {
-    'date': new Date('15 Oct 2020'),
-    'value': 79,
-  },
-  {
-    'date': new Date('22 Oct 2020'),
-    'value': 78,
-  },
-  {
-    'date': new Date('19 Nov 2020'),
-    'value': 71,
-  },
-  {
-    'date': new Date('19 Nov 2020'),
-    'value': 71,
-  },
-  {
-    'date': new Date('26 Nov 2020'),
-    'value': 65,
-  },
-  {
-    'date': new Date('3 Dec 2020'),
-    'value': 62,
-  },
-  {
-    'date': new Date('10 Dec 2020'),
-    'value': 65,
-  },
-  {
-    'date': new Date('17 Dec 2020'),
-    'value': 70,
-  },
-  {
-    'date': new Date('24 Dec 2020'),
-    'value': 73,
-  },
-  {
-    'date': new Date('31 Dec 2020'),
-    'value': 75,
-  },
-  {
-    'date': new Date('14 Jan 2021'),
-    'value': 78,
-  },
-  {
-    'date': new Date('28 Jan 2021'),
-    'value': 75,
-  },
-  {
-    'date': new Date('11 Feb 2021'),
-    'value': 67,
-  },
-  {
-    'date': new Date('4 Mar 2021'),
-    'value': 49,
-  },
-  {
-    'date': new Date('11 Mar 2021'),
-    'value': 50,
-  },
-];
-const self_threat_data: Datum[] = country_threat_data.map(({date, value}) => ({
+
+const DATE_DURATION = 398;
+const FIRST_DATE = new Date('Feb 7 2020');
+/**
+ * There are 216 values in my matrix and 398 days from Feb 7, 2020 to March 2021.
+ * Thus needs appropriate interpolation
+ * @type {({date: Date, value: number}[]}
+ */
+const country_threat_data: Datum[] = values_from_matrix.map((value, i) => {
+  const timestamp = new Date(FIRST_DATE)
+    .setDate(FIRST_DATE.getDate() + i / values_from_matrix.length * DATE_DURATION);
+  const date = new Date(timestamp);
+
+  return { date, value };
+});
+console.log(country_threat_data);
+const self_threat_data: Datum[] = country_threat_data.map(({ date, value }) => ({
   date,
-  value: value - 40,
-}))
+  value: value + 60,
+}));
 const cell22Margin = { top: 372, right: 30, bottom: 30, left: 472 };
 
 const cell22 = svg.select<SVGGElement>('g#cell22')
@@ -105,9 +67,9 @@ const cell22 = svg.select<SVGGElement>('g#cell22')
 // add backdrop
 drawBackDrop(cell22, 125, -2, 317, 185);
 
-const visMargin = { left: 130, top: 65 };
+const visMargin = { left: 130, top: 55 };
 const visWidth = 280;
-const visHeight = 160;
+const visHeight = 180;
 const visAxisPadding = { left: 15, bottom: 95 };
 
 const cell22Vis = cell22
@@ -132,18 +94,21 @@ const scaleX = (function drawXAxis() {
     new Date('27 Aug 2020'),
     new Date('22 Oct 2020'),
     new Date('17 Dec 2020'),
-    new Date('11 Mar 2020'),
+    new Date('11 Mar 2021'),
   ];
 
- const xAxis =                                                                                                                                                                                                                                                          drawMonthDateAxisBottom(
-   cell22,
-   scaleX,
-   tickValues,
-   0,
-   visHeight - visAxisPadding.bottom + 20,
-   BLUE,
- );
+  const xAxis = drawMonthDateAxisBottom(
+    cell22,
+    scaleX,
+    tickValues,
+    visMargin.left,
+    visHeight - 32,
+    BLUE,
+  );
 
+  xAxis.selectAll('text')
+    .style('font-size', '6px');
+  xAxis.select('.domain').remove();
   xAxis.selectAll('text')
     .each((_, index, groups) => {
       const textEl = groups[index] as SVGTextElement;
@@ -161,19 +126,19 @@ const scaleY = (function drawYAxis() {
       Math.min(...country_threat_data.map(d => d.value), ...self_threat_data.map((d) => d.value)),
       Math.max(...country_threat_data.map(d => d.value), ...self_threat_data.map((d) => d.value)),
     ])
-    .range([visHeight - visAxisPadding.bottom, 0]);
+    .range([0, visHeight - visAxisPadding.bottom]);
 })();
 
 function drawLines(data: Datum[], color: string) {
   const tealLine = d3.line<Datum>()
-    .curve(d3.curveMonotoneX)
+    .curve(d3.curveBasisOpen)
     .x(d => scaleX(new Date(d.date)))
     .y(d => scaleY(d.value));
   cell22Vis.append('path')
     .datum(data)
     .attr('fill', 'none')
     .attr('stroke', color)
-    .attr('stroke-width', 2)
+    .attr('stroke-width', 1.5)
     .attr('d', tealLine);
 }
 
@@ -195,12 +160,12 @@ const eventDescriptions = [
   {
     lines: ['3-tier system', 'introduced', '(12th October)'],
     x: 310,
-    y: 75,
+    y: 77,
   },
   {
     lines: ['Third lockdown', 'introduced (6th', 'January)'],
     x: 370,
-    y: 75,
+    y: 77,
   },
 ];
 
@@ -265,16 +230,15 @@ for (let i = 0; i < visLegends.length; i++) {
 }
 
 const valueLabels = [
-  ['57%', -10, 125],
-  ['79%', 55, 60],
-  ['62%', 120, 115],
-  ['78%', 180, 62],
-  ['50%', 250, 120],
+  ['9%', -10, 130, TEAL],
+  ['19%', -15, 85, BLUE],
+  ['25%', 250, 110, TEAL],
+  ['58%', 250, 70, BLUE],
 ] as const;
 
 for (let valueLabel of valueLabels) {
-  const [label, x, y] = valueLabel;
-  drawText(label, TEAL, x + 150, y, '10px')
+  const [label, x, y, color] = valueLabel;
+  drawText(label, color, x + 150, y, '10px')
     .style('font-weight', 'bold');
 }
 
