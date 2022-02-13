@@ -1,0 +1,22 @@
+[
+  {
+    "key": "Strongly agree",
+    "value": 65,
+    "color": "#214D4E"
+  },
+  {
+    "key": "Somewhat agree",
+    "value": 18,
+    "color": "#317372"
+  },
+  {
+    "key": "Somewhat disagree",
+    "value": 9,
+    "color": "#2F469C"
+  },
+  {
+    "key": "Strongly disagree",
+    "value": 8,
+    "color": "#002454"
+  }
+]

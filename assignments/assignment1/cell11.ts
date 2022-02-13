@@ -11,56 +11,13 @@ import {
 } from './util';
 
 
-const data = [
-  {
-    'date': '2020-03-01T04:00:00.000Z',
-    'value': [38, 60],
-  },
-  {
-    'date': '2020-04-01T03:00:00.000Z',
-    'value': [20, 75],
-  },
-  {
-    'date': '2020-05-01T03:00:00.000Z',
-    'value': [10, 85],
-  },
-  {
-    'date': '2020-06-01T03:00:00.000Z',
-    'value': [15, 80],
-  },
-  {
-    'date': '2020-07-01T03:00:00.000Z',
-    'value': [18, 78],
-  },
-  {
-    'date': '2020-08-01T03:00:00.000Z',
-    'value': [20, 75],
-  },
-  {
-    'date': '2020-09-01T03:00:00.000Z',
-    'value': [22, 72],
-  },
-  {
-    'date': '2020-10-01T03:00:00.000Z',
-    'value': [25, 70],
-  },
-  {
-    'date': '2020-11-01T03:00:00.000Z',
-    'value': [28, 68],
-  },
-  {
-    'date': '2020-12-01T04:00:00.000Z',
-    'value': [30, 65],
-  },
-  {
-    'date': '2021-01-01T04:00:00.000Z',
-    'value': [35, 60],
-  },
-  {
-    'date': '2021-02-01T04:00:00.000Z',
-    'value': [20, 80],
-  },
-];
+type Datum = { date: string; value: [number, number] };
+const data = await d3.json<Datum[]>(
+  '/assignment1/cell11.json',
+);
+if (data === undefined) {
+  throw new Error('Could not fetch data');
+}
 const cell11Margin = { top: 170, right: 30, bottom: 30, left: 18 },
   height = 400 - cell11Margin.top - cell11Margin.bottom;
 
@@ -138,7 +95,7 @@ const scaleY = (function drawYAxis() {
 })();
 
 (function drawLines() {
-  const blueLine = d3.line<typeof data[number]>()
+  const blueLine = d3.line<Datum>()
     .curve(d3.curveCardinal)
     .x(d => scaleX(new Date(d.date)))
     .y(d => scaleY(d.value[0]));
@@ -149,7 +106,7 @@ const scaleY = (function drawYAxis() {
     .attr('stroke-width', 5)
     .attr('d', blueLine);
 
-  const tealLine = d3.line<typeof data[number]>()
+  const tealLine = d3.line<Datum>()
     .curve(d3.curveCardinal)
     .x(d => scaleX(new Date(d.date)))
     .y(d => scaleY(d.value[1]));

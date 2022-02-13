@@ -18,22 +18,12 @@ import {
  * I find the index of the maximum value for blue.
  * @type {number[]}
  */
-const values_from_matrix = [
-  68, 66, 64, 62, 60, 58, 57, 56, 55, 54,
-  52, 48, 42, 38, 30, 29, 28, 27, 26, 22, 20, 17, 10, 4, 4, 4, 4,
-  4, 4, 5, 6, 6, 5, 6, 5, 10, 11, 8, 9, 10, 10, 10, 10, 10,
-  11, 15, 15, 15, 12, 15, 16, 15, 14, 16, 17, 19, 20, 21, 21, 21, 22,
-  22, 22, 19, 19, 23, 20, 20, 20, 20, 20, 20, 20, 20, 20, 23, 22, 21,
-  21, 21, 30, 22, 22, 23, 24, 28, 29, 26, 27, 27, 27, 27, 27, 30, 26,
-  26, 29, 29, 30, 31, 28, 32, 29, 30, 30, 29, 28, 28, 31, 25, 29, 23,
-  23, 21, 21, 21, 20, 23, 22, 22, 21, 20, 19, 22, 23, 20, 20, 24, 24,
-  20, 20, 19, 22, 22, 22, 18, 18, 18, 18, 17, 18, 17, 17, 17, 17, 17,
-  18, 18, 19, 19, 23, 20, 20, 23, 23, 24, 21, 21, 21, 21, 21, 24, 23,
-  19, 18, 18, 17, 20, 16, 15, 15, 14, 13, 16, 15, 11, 10, 9, 9, 8, 11,
-  7, 7, 7, 7, 8, 8, 9, 9, 10, 11, 11, 13, 14, 15,
-  16, 17, 18, 19, 20, 22, 23, 25, 26, 27, 28, 29, 30, 31, 31, 31, 31,
-  32, 32,
-];
+const values_from_matrix = await d3.json<number[]>(
+  '/assignment1/cell22.json',
+);
+if (values_from_matrix === undefined) {
+  throw new Error('Could not fetch data');
+}
 
 type Datum = {
   date: Date,
@@ -57,9 +47,11 @@ const country_threat_data: Datum[] = values_from_matrix.map((value, i) => {
 // could not retrieve the teal values as white pixels
 // also contain large green and blue pixels.
 // Therefore, simulating.
-const self_threat_data: Datum[] = country_threat_data.map(({ date, value }) => ({
+const self_threat_data: Datum[] = country_threat_data.map(({ date, value }, i) => ({
   date,
-  value: value + 60,
+  // Some weird equation that makes the difference
+  // between the two lines somewhat better.
+  value: i > 50 ? value + 40 : value + 20 + 20 * i / 50,
 }));
 const cell22Margin = { top: 372, right: 30, bottom: 30, left: 472 };
 
@@ -152,22 +144,22 @@ const eventDescriptions = [
   {
     lines: ['UK first', 'lockdown', 'announced', '(23rd March)'],
     x: 170,
-    y: 110,
+    y: 115,
   },
   {
     lines: ['3-step lockdown', 'easing plan', 'announced (10th', 'May)'],
     x: 205,
-    y: 75,
+    y: 80,
   },
   {
     lines: ['3-tier system', 'introduced', '(12th October)'],
     x: 310,
-    y: 77,
+    y: 78,
   },
   {
     lines: ['Third lockdown', 'introduced (6th', 'January)'],
     x: 370,
-    y: 77,
+    y: 78,
   },
 ];
 
@@ -232,8 +224,8 @@ for (let i = 0; i < visLegends.length; i++) {
 }
 
 const valueLabels = [
-  ['9%', -10, 130, TEAL],
-  ['19%', -15, 85, BLUE],
+  ['9%', -15, 130, TEAL],
+  ['19%', -18, 105, BLUE],
   ['25%', 250, 110, TEAL],
   ['58%', 250, 70, BLUE],
 ] as const;

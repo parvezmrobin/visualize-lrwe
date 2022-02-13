@@ -29,34 +29,19 @@ const group21Viz = group21
   .attr('id', 'vis21')
   .style('transform', `translate(${visMargin.left + visRadius}px, ${visMargin.top + visRadius}px)`);
 
-const data = [
-  {
-    'key': 'Strongly agree',
-    'value': 65,
-    'color': '#214D4E',
-  },
-  {
-    'key': 'Somewhat agree',
-    'value': 18,
-    'color': '#317372',
-  },
-  {
-    'key': 'Somewhat disagree',
-    'value': 9,
-    'color': '#2F469C',
-  },
-  {
-    'key': 'Strongly disagree',
-    'value': 8,
-    'color': '#002454',
-  },
-];
+type Datum = { key: string; value: number; color: string };
+const data = await d3.json<Datum[]>(
+  '/assignment1/cell21.json',
+);
+if (data === undefined) {
+  throw new Error('Could not fetch data');
+}
 
-const colorScale = d3.scaleOrdinal<typeof data[number], string>()
+const colorScale = d3.scaleOrdinal<Datum, string>()
   .domain(data)
   .range(data.map((entry) => entry.color));
 
-const pieChart = d3.pie<typeof data[number]>()
+const pieChart = d3.pie<Datum>()
   .value((d) => d.value);
 
 const piedData = pieChart(data);

@@ -8,85 +8,22 @@ import {
   TEAL,
 } from './util';
 
+type Datum = {
+  date: Date,
+  value: number;
+}
+const jsonData = (await d3.json<{
+  date: string,
+  value: number;
+}[]>('/assignment1/cell31.json'));
+if (jsonData === undefined) {
+  throw new Error('Filed to load data');
+}
+const data: Datum[] = jsonData.map(({date, value}) => ({
+  date: new Date(date),
+  value,
+}));
 
-const data = [
-  {
-    'date': new Date('27 Aug 2020'),
-    'value': 57,
-  },
-  {
-    'date': new Date('24 Sep 2020'),
-    'value': 77,
-  },
-  {
-    'date': new Date('1 Oct 2020'),
-    'value': 77,
-  },
-  {
-    'date': new Date('8 Oct 2020'),
-    'value': 78,
-  },
-  {
-    'date': new Date('15 Oct 2020'),
-    'value': 79,
-  },
-  {
-    'date': new Date('22 Oct 2020'),
-    'value': 78,
-  },
-  {
-    'date': new Date('19 Nov 2020'),
-    'value': 71,
-  },
-  {
-    'date': new Date('19 Nov 2020'),
-    'value': 71,
-  },
-  {
-    'date': new Date('26 Nov 2020'),
-    'value': 65,
-  },
-  {
-    'date': new Date('3 Dec 2020'),
-    'value': 62,
-  },
-  {
-    'date': new Date('10 Dec 2020'),
-    'value': 65,
-  },
-  {
-    'date': new Date('17 Dec 2020'),
-    'value': 70,
-  },
-  {
-    'date': new Date('24 Dec 2020'),
-    'value': 73,
-  },
-  {
-    'date': new Date('31 Dec 2020'),
-    'value': 75,
-  },
-  {
-    'date': new Date('14 Jan 2021'),
-    'value': 78,
-  },
-  {
-    'date': new Date('28 Jan 2021'),
-    'value': 75,
-  },
-  {
-    'date': new Date('11 Feb 2021'),
-    'value': 67,
-  },
-  {
-    'date': new Date('4 Mar 2021'),
-    'value': 49,
-  },
-  {
-    'date': new Date('11 Mar 2021'),
-    'value': 50,
-  },
-];
 const cell31Margin = { top: 570, right: 30, bottom: 30, left: 18 };
 
 const cell31 = svg.select<SVGGElement>('g#cell31')
@@ -146,7 +83,7 @@ const scaleX = (function drawXAxis() {
       const startDate = new Date(textEl.textContent as string);
       const endDate = new Date(startDate.setDate(startDate.getDate() + 4));
       if (textEl.textContent === 'Oct 8') {
-        endDate.setDate(endDate.getDate() + 1)
+        endDate.setDate(endDate.getDate() + 1);
       }
       textEl.textContent += ' -';
       d3.select(textEl.parentNode as SVGElement)
@@ -173,7 +110,7 @@ const scaleY = (function drawYAxis() {
 })();
 
 (function drawLines() {
-  const tealLine = d3.line<typeof data[number]>()
+  const tealLine = d3.line<Datum>()
     .curve(d3.curveMonotoneX)
     .x(d => scaleX(new Date(d.date)))
     .y(d => scaleY(d.value));
