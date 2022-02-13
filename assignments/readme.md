@@ -36,7 +36,10 @@ will show the assignment result.
 
 To directly run the code, you need to install the toolset and
 start the server.
-To do so, run the following commands.
+
+First install [node.js](https://nodejs.org/en/download/) and
+[yarn](https://classic.yarnpkg.com/en/docs/install#windows-stable).
+Then to install the necessary packages, run the following commands.
 
 ```shell
 yarn install # to install the necessary packages
