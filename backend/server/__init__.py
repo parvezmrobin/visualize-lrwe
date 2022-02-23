@@ -1,3 +1,4 @@
+import json
 import os
 from typing import Dict, List
 
@@ -26,8 +27,20 @@ tomcat_df = pd.read_excel(TOMCAT_DATA_FILE, 0)
 dataframes['tomcat'] = tomcat_df
 
 embedding_index = get_embedding_index()
+print('Loaded embedding.')
+
 pca = PCA(n_components=2)
 pca.fit(np.stack(list(embedding_index.values()), axis=0))
+print('Initiated PCA.')
+
+file_embeddings: FileEmbeddings
+file_tokens_of: Dict[str, List[str]]
+file_map = dict(get_java_files_from(TOMCAT_REPO_DIR, no_prefix=True))
+file_embeddings, file_tokens_of = get_embeddings(
+  file_map, embedding_index, return_stemmed_tokens=True,
+)
+
+print('Bootstrapped.')
 
 
 @app.route('/bug', methods=['GET'])
@@ -36,17 +49,10 @@ def get_bug_ids():
   return jsonify(summary)
 
 
-@app.route('/bug/<bug_id>/file')
-def get_file_list_for_bug(bug_id):
-  bug_row = tomcat_df[tomcat_df.bug_id == int(bug_id)].iloc[0]
-  commit = bug_row.commit
-  checkout_to(commit, TOMCAT_REPO_DIR)
-  file_map = dict(get_java_files_from(TOMCAT_REPO_DIR, no_prefix=True))
-  return jsonify(list(file_map.keys()))
-
-
 @app.route('/bug/<bug_id>/similarities')
 def get_word_similarities(bug_id):
+  global file_embeddings, file_tokens_of
+
   # gather necessary data
   bug_row = tomcat_df[tomcat_df.bug_id == int(bug_id)].iloc[0]
   commit = bug_row.commit
@@ -55,16 +61,8 @@ def get_word_similarities(bug_id):
     bug_report += ('\n' + bug_row.description)
 
   checkout_to(commit, TOMCAT_REPO_DIR)
-  file_map = dict(get_java_files_from(TOMCAT_REPO_DIR, no_prefix=True))
 
   # generate tokens and embeddings
-  file_embeddings: FileEmbeddings
-  file_tokens_of: Dict[str, List[str]]
-  file_embeddings, file_tokens_of = get_embeddings(
-    file_map, embedding_index, return_stemmed_tokens=True,
-  )
-  del file_map
-
   bug_report_embedding: np.ndarray
   bug_report_tokens: List[str]
   bug_report_embedding, bug_report_tokens = get_embedding_of_file(
@@ -83,7 +81,6 @@ def get_word_similarities(bug_id):
     filename: cosine_similarity(bug_report_embedding, file_embedding)
     for filename, file_embedding in file_embeddings.items()
   }
-  del bug_report_embedding, file_embeddings
 
   # 0th axis is bug-report axis. Therefore, reducing over axis 1 will give
   # maximum similarity for each bug word
@@ -135,27 +132,57 @@ def get_word_similarities(bug_id):
     for fn in bug_to_file_similarity.keys()
   }
 
-  most_similar_100_files = list(sorted(
+  top_files = list(sorted(
     asymmetric_similarity.keys(),
     key=lambda fn: asymmetric_similarity[fn],
     reverse=True,
   ))[:100]
 
-  return jsonify({
-    'fileTokens': file_tokens_of,
-    'fileEmbedding': file_embedding_2d,
+  top_word_i_of: Dict[str, List[int]] = {}
+  for filename in top_files:
+    most_similar_100_word_indices = np.argsort(
+      -file_word_to_bug_similarities[filename],
+    )[:100]
+    top_word_i_of[filename] = most_similar_100_word_indices
+
+  # select data for response
+  resp_file_tokens = {
+    filename: [file_tokens_of[filename][i] for i in top_word_i_of[filename]]
+    for filename in top_files
+  }
+  resp_file_embeddings = {
+    filename: file_embedding_2d[filename]
+    for filename in top_files
+  }
+
+  resp_word_to_word_similarities = {
+    filename: (word_to_word_similarities
+               [filename][:, top_word_i_of[filename]].tolist())
+    for filename in top_files
+  }
+
+  resp_file_word_to_bug_similarity = {
+    filename: (file_word_to_bug_similarities
+               [filename][top_word_i_of[filename]].tolist())
+    for filename in top_files
+  }
+
+  response = json.dumps({
+    'fileTokens': resp_file_tokens,
+    'fileEmbedding': resp_file_embeddings,
     'bugReportTokens': bug_report_tokens,
     'bugReportEmbedding': bug_report_embedding_2d,
-    'wordToWordSimilarities': ndarray_dict_to_primitive(
-      word_to_word_similarities, most_similar_100_files),
-    'fileWordToBugSimilarity': ndarray_dict_to_primitive(
-      file_word_to_bug_similarities, most_similar_100_files),
+    'wordToWordSimilarities': resp_word_to_word_similarities,
+    'fileWordToBugSimilarity': resp_file_word_to_bug_similarity,
     'bugWordToFileSimilarities': ndarray_dict_to_primitive(
-      bug_word_to_file_similarities, most_similar_100_files),
+      bug_word_to_file_similarities, top_files),
     'bugReportToFileSimilarity': ndarray_dict_to_primitive(
-      bug_to_file_similarity, most_similar_100_files),
+      bug_to_file_similarity, top_files),
     'fileToBugReportSimilarity': ndarray_dict_to_primitive(
-      file_to_bug_similarity, most_similar_100_files),
+      file_to_bug_similarity, top_files),
     'asymmetricSimilarity': ndarray_dict_to_primitive(
-      asymmetric_similarity, most_similar_100_files),
+      asymmetric_similarity, top_files),
   })
+
+  print('Response size:', len(response))
+  return response

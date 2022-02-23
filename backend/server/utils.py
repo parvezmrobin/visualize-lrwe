@@ -10,6 +10,8 @@ import re
 from nltk.tokenize import wordpunct_tokenize
 from nltk.stem import PorterStemmer
 
+EMBEDDING_DIMENSION = 100
+
 
 def ensure_glove_embedding(verbose=False):
   embedding_data_path = get_file(
@@ -21,7 +23,8 @@ def ensure_glove_embedding(verbose=False):
 
   # If this operation fails, print the parent-dir
   # go there, and extract the file
-  file_path = pathlib.Path(embedding_data_path).parent / 'glove.6B.300d.txt'
+  file_path = pathlib.Path(
+    embedding_data_path).parent / f'glove.6B.{EMBEDDING_DIMENSION}d.txt'
 
   if verbose:
     with open(file_path, encoding='utf-8') as glove_embedding_file:
@@ -135,7 +138,7 @@ def get_embedding_of_file(
   stemmer = PorterStemmer()
   stemmed_tokens = [stemmer.stem(w) for w in word_tokens if w]
   found_ratio = 0
-  embedding = np.zeros((len(stemmed_tokens), 300))
+  embedding = np.zeros((len(stemmed_tokens), EMBEDDING_DIMENSION))
   for i, stemmed_token in enumerate(stemmed_tokens):
     if stemmed_token in embedding_index.keys():
       embedding[i] = embedding_index[stemmed_token]
