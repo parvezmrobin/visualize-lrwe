@@ -1,6 +1,7 @@
 <template>
   <div id="nav">
     <router-link to="/">Home</router-link> |
+    <router-link to="/bug-localization">Bug Localization</router-link> |
     <router-link to="/custom-drawing">Custom Drawing</router-link>
   </div>
   <router-view />

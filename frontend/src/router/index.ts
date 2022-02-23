@@ -8,13 +8,21 @@ const routes: Array<RouteRecordRaw> = [
     component: Home,
   },
   {
+    path: "/bug-localization",
+    name: "BugLocalization",
+    component: () =>
+      import(
+        /* webpackChunkName: "bug-localization" */
+        "../views/BugLocalization.vue"
+      ),
+  },
+  {
     path: "/custom-drawing",
     name: "CustomDrawing",
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
     component: () =>
-      import(/* webpackChunkName: "about" */ "../views/CustomDrawing.vue"),
+      import(
+        /* webpackChunkName: "custom-drawing" */ "../views/CustomDrawing.vue"
+      ),
   },
 ];
 
