@@ -68,9 +68,9 @@ def get_word_similarities(bug_id):
   bug_report_embedding_2d = pca.transform(bug_report_embedding)
 
   return jsonify({
-    'file_tokens': file_tokens,
-    'file_embedding': file_embedding_2d.tolist(),
-    'bug_report_tokens': bug_report_tokens,
-    'bug_report_embedding': bug_report_embedding_2d.tolist(),
+    'fileTokens': file_tokens,
+    'fileEmbedding': file_embedding_2d.tolist(),
+    'bugReportTokens': bug_report_tokens,
+    'bugReportEmbedding': bug_report_embedding_2d.tolist(),
     'similarities': similarities.tolist(),
   })

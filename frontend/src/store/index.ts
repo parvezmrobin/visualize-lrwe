@@ -2,6 +2,7 @@ import { createStore } from "vuex";
 
 export interface State {
   files: string[];
+  bugReport
 }
 
 export default createStore<State>({
@@ -16,6 +17,9 @@ export default createStore<State>({
     updateFiles(self, files) {
       self.state.files = files;
     },
+    updateSimilarityData(self, files) {
+
+    }
   },
   modules: {},
 });
