@@ -101,6 +101,12 @@ def get_java_files_from(
             yield filepath, java_file.read()
 
 
+def get_word_tokens(t: str):
+  if re.match('^[A-Z_]+$', t):
+    return t.split('_')
+  return re.split('(?=[A-Z])', t)
+
+
 def get_embedding_of_file(
   file: str,
   embedding_index: Dict[str, np.ndarray],
@@ -122,9 +128,9 @@ def get_embedding_of_file(
   identifier_tokens = filter(
     lambda w: w.isalnum() and not w.isnumeric(), tokens,
   )
-  word_tokens = (w for t in identifier_tokens for w in re.split('(?=[A-Z])', t))
+  word_tokens = (w for t in identifier_tokens for w in get_word_tokens(t))
   stemmer = PorterStemmer()
-  stemmed_tokens = [stemmer.stem(w) for w in word_tokens]
+  stemmed_tokens = [stemmer.stem(w) for w in word_tokens if w]
   found_ratio = 0
   embedding = np.zeros((len(stemmed_tokens), 300))
   for i, stemmed_token in enumerate(stemmed_tokens):
