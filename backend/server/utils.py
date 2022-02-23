@@ -73,6 +73,9 @@ def get_embedding_index():
 
 
 def checkout_to(commit, cwd):
+  """
+  TODO: add directory specific lock support
+  """
   try:
     subprocess.run(
       f'git checkout {commit}',
