@@ -1,13 +1,15 @@
 import os
 from typing import Dict
 
+import numpy as np
 import pandas as pd
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+from sklearn.decomposition import PCA
 from sklearn.metrics.pairwise import cosine_similarity
 
-from server.utils import get_embedding_index, checkout_to, get_java_files_from, \
-  get_embeddings, get_embedding_of_file
+from server.utils import get_embedding_index, checkout_to, \
+  get_java_files_from, get_embeddings, get_embedding_of_file
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 assert os.getcwd().endswith('backend')
@@ -60,8 +62,15 @@ def get_word_similarities(bug_id):
   )
   similarities = cosine_similarity(bug_report_embedding, file_embedding)
 
+  pca = PCA(n_components=2)
+  pca.fit(np.concatenate([file_embedding, bug_report_embedding], axis=0))
+  file_embedding_2d = pca.transform(file_embedding)
+  bug_report_embedding_2d = pca.transform(bug_report_embedding)
+
   return jsonify({
     'file_tokens': file_tokens,
+    'file_embedding': file_embedding_2d.tolist(),
     'bug_report_tokens': bug_report_tokens,
+    'bug_report_embedding': bug_report_embedding_2d.tolist(),
     'similarities': similarities.tolist(),
   })
