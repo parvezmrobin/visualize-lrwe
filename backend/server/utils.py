@@ -1,5 +1,6 @@
 import os
 import pathlib
+import subprocess
 from typing import Dict, Generator, Tuple, Union, List
 
 import numpy as np
@@ -69,6 +70,21 @@ def create_embedding_index(embedding_file_path: pathlib.Path, verbose=False):
 
 def get_embedding_index():
   return create_embedding_index(ensure_glove_embedding())
+
+
+def checkout_to(commit, cwd):
+  try:
+    subprocess.run(
+      f'git checkout {commit}',
+      shell=True,
+      cwd=cwd,
+      capture_output=True,
+      check=True,
+      encoding='utf-8',
+    )
+  except subprocess.CalledProcessError as e:
+    print(e.stderr)
+    raise
 
 
 def get_java_files_from(repo: str) -> Generator[Tuple[str, str], None, None]:

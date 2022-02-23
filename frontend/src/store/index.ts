@@ -1,8 +1,20 @@
 import { createStore } from "vuex";
 
-export default createStore({
-  state: {},
+export interface State {
+  files: string[];
+}
+
+export default createStore<State>({
+  state() {
+    return {
+      files: [],
+    };
+  },
   mutations: {},
-  actions: {},
+  actions: {
+    updateFiles(self, files) {
+      self.state.files = files;
+    },
+  },
   modules: {},
 });
