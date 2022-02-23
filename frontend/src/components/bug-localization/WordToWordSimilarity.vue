@@ -1,7 +1,28 @@
 <template>
-  <svg ref="svg"></svg>
-  <div ref="popperBugReport" class="popper br" hidden></div>
-  <div ref="popperFile" class="popper file" hidden></div>
+  <div style="position: relative">
+    <svg ref="svg" @fullscreenchange="onFullScreenChange"></svg>
+    <div ref="popperBugReport" class="popper br" hidden></div>
+    <div ref="popperFile" class="popper file" hidden></div>
+    <button
+      @click="makeFullScreen"
+      ref="btnMax"
+      class="btn btn-outline-dark max"
+      title="Make the graph full screen"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="16"
+        height="16"
+        fill="currentColor"
+        class="bi bi-fullscreen"
+        viewBox="0 0 16 16"
+      >
+        <path
+          d="M1.5 1a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0v-4A1.5 1.5 0 0 1 1.5 0h4a.5.5 0 0 1 0 1h-4zM10 .5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 16 1.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5zM.5 10a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 0 14.5v-4a.5.5 0 0 1 .5-.5zm15 0a.5.5 0 0 1 .5.5v4a1.5 1.5 0 0 1-1.5 1.5h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5z"
+        />
+      </svg>
+    </button>
+  </div>
 </template>
 
 <script lang="ts">
@@ -30,10 +51,20 @@ export default defineComponent({
   },
 
   methods: {
+    async makeFullScreen() {
+      const svg = this.$refs.svg as SVGElement;
+      await svg.requestFullscreen({ navigationUI: "show" });
+    },
+    onFullScreenChange() {
+      this.drawSimilarity();
+      (this.$refs.btnMax as HTMLButtonElement).hidden =
+        !!document.fullscreenElement;
+    },
     drawSimilarity() {
       const DOT_RADIUS = 3;
 
       const svg = this.$refs.svg as SVGElement;
+      svg.style.height = `${svg.clientWidth}px`;
 
       d3.select(svg).selectAll("g").remove();
 
@@ -121,8 +152,6 @@ export default defineComponent({
   },
 
   mounted(): void {
-    const svg = this.$refs.svg as SVGElement;
-    svg.style.height = `${svg.clientWidth}px`;
     this.drawSimilarity();
   },
 });
@@ -131,6 +160,14 @@ export default defineComponent({
 <style lang="scss" scoped>
 svg {
   width: 100%;
+
+  &:fullscreen {
+    background-color: white;
+    width: 100vh;
+    position: fixed;
+    top: 0;
+    z-index: 100;
+  }
 }
 
 .popper {
@@ -146,5 +183,11 @@ svg {
     background-color: darkmagenta;
     color: white;
   }
+}
+
+.btn.max {
+  position: absolute;
+  top: 0;
+  right: 0;
 }
 </style>
