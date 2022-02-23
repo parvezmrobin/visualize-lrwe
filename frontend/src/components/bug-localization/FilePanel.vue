@@ -12,6 +12,7 @@
 </template>
 
 <script lang="ts">
+import { SimilarityPayload } from "@/store";
 import axios from "axios";
 import { defineComponent } from "vue";
 import { mapState } from "vuex";
@@ -30,12 +31,12 @@ export default defineComponent({
 
   watch: {
     async selectedFile() {
-      const resp = await axios.get(
+      const resp = await axios.get<SimilarityPayload>(
         encodeURI(
           `/bug/${this.selectedBug}/word-similarities?file=${this.selectedFile}`
         )
       );
-      console.log(resp.data);
+      await this.$store.dispatch("updateSimilarityData", resp.data);
     },
   },
 });
