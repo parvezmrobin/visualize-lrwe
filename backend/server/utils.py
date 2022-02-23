@@ -115,7 +115,7 @@ def get_embedding_of_file(
   embedding_index: Dict[str, np.ndarray],
   return_stemmed_tokens=False,
   return_found_ratio=False,
-) -> Union[np.ndarray, Tuple[np.ndarray, float]]:
+) -> Union[np.ndarray, Tuple]:
   """
   In AspectJ, statistics of finding embedding before and after applying stemming
   Improvement in: 144
@@ -155,18 +155,37 @@ def get_embedding_of_file(
 def get_embeddings(
   file_map: Dict[str, str],
   embedding_index: Dict[str, np.ndarray],
-  return_found_ratio=False
-) -> Union[FileEmbeddings, Tuple[FileEmbeddings, List[float]]]:
+  return_stemmed_tokens=True,
+  return_found_ratio=False,
+) -> Union[FileEmbeddings, Tuple]:
   file_embeddings: FileEmbeddings = {}
+  file_tokens = {}
   found_ratios = []
 
   for filename, file in file_map.items():
-    embedding, found_ratio = get_embedding_of_file(
-      file, embedding_index, return_found_ratio=True,
+    embedding, stemmed_tokens, found_ratio = get_embedding_of_file(
+      file,
+      embedding_index,
+      return_stemmed_tokens=True,
+      return_found_ratio=True,
     )
-    found_ratios.append(found_ratio)
     file_embeddings[filename] = embedding
+    file_tokens[filename] = stemmed_tokens
+    found_ratios.append(found_ratio)
 
+  ret = [file_embeddings]
+
+  if return_stemmed_tokens:
+    ret.append(file_tokens)
   if return_found_ratio:
-    return file_embeddings, found_ratios
-  return file_embeddings
+    ret.append(found_ratios)
+  return file_embeddings if len(ret) == 1 else ret
+
+
+def ndarray_dict_to_primitive(
+  d: Dict[str, np.ndarray], keys=None,
+) -> Dict[str, float]:
+  return {
+    key: d[key].tolist()
+    for key in keys or d.keys()
+  }
