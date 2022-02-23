@@ -36,17 +36,20 @@ export default defineComponent({
 
   computed: {
     ...mapState([
+      "selectedFile",
       "fileEmbedding",
       "fileTokens",
       "bugReportEmbedding",
       "bugReportTokens",
-      "similarities",
+      "wordToWordSimilarities",
     ]),
   },
 
   watch: {
-    similarities() {
-      this.drawSimilarity();
+    selectedFile() {
+      if (this.wordToWordSimilarities) {
+        this.drawSimilarity();
+      }
     },
   },
 
@@ -68,12 +71,13 @@ export default defineComponent({
 
       d3.select(svg).selectAll("g").remove();
 
+      const fileEmbedding = this.fileEmbedding[this.selectedFile];
       const min = Math.min(
-        ...this.fileEmbedding.flat(),
+        ...fileEmbedding.flat(),
         ...this.bugReportEmbedding.flat()
       );
       const max = Math.max(
-        ...this.fileEmbedding.flat(),
+        ...fileEmbedding.flat(),
         ...this.bugReportEmbedding.flat()
       );
       const xScale = d3
@@ -90,11 +94,13 @@ export default defineComponent({
 
       const createShowPopperFunction = (
         embedding: [number, number][],
-        popper: HTMLDivElement
+        popper: HTMLDivElement,
+        words: string[]
       ): ShowPopper => {
+        console.log("words", words);
         return (e: MouseEvent, point) => {
           const index = embedding.indexOf(point);
-          const word = this.bugReportTokens[index];
+          const word = words[index];
 
           popper.hidden = false;
           popper.innerText = word;
@@ -108,7 +114,7 @@ export default defineComponent({
       d3.select(svg)
         .append("g")
         .selectAll(".file.dot")
-        .data<[number, number]>(this.fileEmbedding)
+        .data<[number, number]>(fileEmbedding)
         .enter()
         .append("circle")
         .attr("cx", (d) => xScale((d as number[])[0]))
@@ -118,8 +124,9 @@ export default defineComponent({
         .on(
           "mouseenter",
           createShowPopperFunction(
-            this.fileEmbedding,
-            this.$refs.popperFile as HTMLDivElement
+            fileEmbedding,
+            this.$refs.popperFile as HTMLDivElement,
+            this.fileTokens[this.selectedFile]
           )
         )
         .on("mouseout", () => {
@@ -141,7 +148,8 @@ export default defineComponent({
           "mouseenter",
           createShowPopperFunction(
             this.bugReportEmbedding,
-            this.$refs.popperBugReport as HTMLDivElement
+            this.$refs.popperBugReport as HTMLDivElement,
+            this.bugReportTokens
           )
         )
         .on("mouseout", () => {
