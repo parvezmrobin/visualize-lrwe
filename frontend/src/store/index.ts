@@ -7,6 +7,7 @@ export interface State {
 export default createStore<State>({
   state() {
     return {
+      selectedBug: '',
       files: [],
     };
   },

@@ -87,16 +87,25 @@ def checkout_to(commit, cwd):
     raise
 
 
-def get_java_files_from(repo: str) -> Generator[Tuple[str, str], None, None]:
+def get_java_files_from(
+  repo: str, no_prefix=False,
+) -> Generator[Tuple[str, str], None, None]:
   for root, dirs, files in os.walk(repo):
     for file in files:
       if file.endswith('.java'):
         with open(os.path.join(root, file)) as java_file:
-          yield os.path.join(root, file), java_file.read()
+          filepath = os.path.join(root, file)
+          if no_prefix:
+            yield filepath[len(repo) + 1:], java_file.read()
+          else:
+            yield filepath, java_file.read()
 
 
 def get_embedding_of_file(
-  file: str, embedding_index: Dict[str, np.ndarray], return_found_ratio=False
+  file: str,
+  embedding_index: Dict[str, np.ndarray],
+  return_stemmed_tokens=False,
+  return_found_ratio=False,
 ) -> Union[np.ndarray, Tuple[np.ndarray, float]]:
   """
   In AspectJ, statistics of finding embedding before and after applying stemming
@@ -124,10 +133,14 @@ def get_embedding_of_file(
       found_ratio += 1
   found_ratio /= len(stemmed_tokens)
 
-  if return_found_ratio:
-    return embedding, found_ratio
+  ret = [embedding]
+  if return_stemmed_tokens:
+    ret.append(stemmed_tokens)
 
-  return embedding
+  if return_found_ratio:
+    ret.append(found_ratio)
+
+  return embedding if len(ret) == 1 else ret
 
 
 def get_embeddings(
@@ -139,7 +152,9 @@ def get_embeddings(
   found_ratios = []
 
   for filename, file in file_map.items():
-    embedding, found_ratio = get_embedding_of_file(file, embedding_index, True)
+    embedding, found_ratio = get_embedding_of_file(
+      file, embedding_index, return_found_ratio=True,
+    )
     found_ratios.append(found_ratio)
     file_embeddings[filename] = embedding
 

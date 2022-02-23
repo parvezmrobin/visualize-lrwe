@@ -25,14 +25,23 @@ export default defineComponent({
   data() {
     return {
       bugs: [] as BugSummary[],
-      selectedBug: "",
     };
+  },
+
+  computed: {
+    selectedBug: {
+      get() {
+        return this.$store.state.selectedBug;
+      },
+      set(value) {
+        this.$store.state.selectedBug = value;
+      },
+    },
   },
 
   watch: {
     async selectedBug() {
-      const resp = await axios.get(`/bug/${this.selectedBug}/files`);
-      console.log(resp.data);
+      const resp = await axios.get(`/bug/${this.selectedBug}/file`);
       await this.$store.dispatch("updateFiles", resp.data);
     },
   },
