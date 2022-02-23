@@ -85,8 +85,25 @@ def get_word_similarities(bug_id):
   known_bug_report_tokens = (token for token in bug_report_tokens
                              if token in embedding_index.keys())
   common_words = set(known_bug_report_tokens) & set(file_tokens)
-  bug_report_to_file_similarity = (np.sum(bug_word_to_file_similarities)
-                                   / len(common_words))
+  bug_to_file_similarity = (np.sum(bug_word_to_file_similarities)
+                            / len(common_words))
+
+  # List of common words will be the same. Use the following
+  # Ven Diagram as proof.
+  #                        ┏━━━━━━━━━━━━┓
+  #                        ┃            ┃←───── embedding_index.keys()
+  #                    ┌───┃────▅▅▅▅════┃═══╗
+  #                    │   ┃    ████    │   ║
+  # bug_report_tokens →│   ┗━━━━▀▀▀▀━━━━┛   ║← file_tokens
+  #                    │        ║  │        ║
+  #                    └────────╚══╧════════╝
+  # The blocked part is common words
+
+  file_word_to_bug_similarities = np.max(similarities, axis=0)
+  file_to_bug_similarity = (np.sum(file_word_to_bug_similarities)
+                            / len(common_words))
+
+  asymmetric_similarity = bug_to_file_similarity + file_to_bug_similarity
 
   return jsonify({
     'fileTokens': file_tokens,
@@ -95,5 +112,7 @@ def get_word_similarities(bug_id):
     'bugReportEmbedding': bug_report_embedding_2d.tolist(),
     'similarities': similarities.tolist(),
     'bugWordToFileSimilarities': bug_word_to_file_similarities.tolist(),
-    'bugReportToFileSimilarity': bug_report_to_file_similarity.tolist(),
+    'bugReportToFileSimilarity': bug_to_file_similarity.tolist(),
+    'fileToBugReportSimilarity': file_to_bug_similarity.tolist(),
+    'asymmetricSimilarity': asymmetric_similarity.tolist(),
   })
