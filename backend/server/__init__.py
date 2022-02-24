@@ -37,7 +37,7 @@ file_embeddings: FileEmbeddings
 file_tokens_of: Dict[str, List[str]]
 file_map = dict(get_java_files_from(TOMCAT_REPO_DIR, no_prefix=True))
 file_embeddings, file_tokens_of = get_embeddings(
-  file_map, embedding_index, return_stemmed_tokens=True,
+  file_map, embedding_index, return_tokens=True,
 )
 
 print('Bootstrapped.')
@@ -66,7 +66,7 @@ def get_word_similarities(bug_id):
   bug_report_embedding: np.ndarray
   bug_report_tokens: List[str]
   bug_report_embedding, bug_report_tokens = get_embedding_of_file(
-    bug_report, embedding_index, return_stemmed_tokens=True,
+    bug_report, embedding_index, return_tokens=True,
   )
 
   # compute similarities

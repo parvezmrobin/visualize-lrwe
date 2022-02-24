@@ -9,8 +9,11 @@ import re
 
 from nltk.tokenize import wordpunct_tokenize
 from nltk.stem import PorterStemmer
+from nltk.corpus import stopwords as stopwords_loader
 
 EMBEDDING_DIMENSION = 100
+_stemmer = PorterStemmer()
+stopwords = stopwords_loader.words('english')
 
 
 def ensure_glove_embedding(verbose=False):
@@ -116,7 +119,7 @@ def get_word_tokens(t: str):
 def get_embedding_of_file(
   file: str,
   embedding_index: Dict[str, np.ndarray],
-  return_stemmed_tokens=False,
+  return_tokens=False,
   return_found_ratio=False,
 ) -> Union[np.ndarray, Tuple]:
   """
@@ -135,19 +138,19 @@ def get_embedding_of_file(
     lambda w: w.isalnum() and not w.isnumeric(), tokens,
   )
   word_tokens = (w for t in identifier_tokens for w in get_word_tokens(t))
-  stemmer = PorterStemmer()
-  stemmed_tokens = [stemmer.stem(w) for w in word_tokens if w]
+  stemmed_tokens = [_stemmer.stem(w) for w in word_tokens if w]
+  runwords = [w for w in stemmed_tokens if w not in stopwords]
   found_ratio = 0
-  embedding = np.zeros((len(stemmed_tokens), EMBEDDING_DIMENSION))
-  for i, stemmed_token in enumerate(stemmed_tokens):
+  embedding = np.zeros((len(runwords), EMBEDDING_DIMENSION))
+  for i, stemmed_token in enumerate(runwords):
     if stemmed_token in embedding_index.keys():
       embedding[i] = embedding_index[stemmed_token]
       found_ratio += 1
-  found_ratio /= len(stemmed_tokens)
+  found_ratio /= len(runwords)
 
   ret = [embedding]
-  if return_stemmed_tokens:
-    ret.append(stemmed_tokens)
+  if return_tokens:
+    ret.append(runwords)
 
   if return_found_ratio:
     ret.append(found_ratio)
@@ -158,7 +161,7 @@ def get_embedding_of_file(
 def get_embeddings(
   file_map: Dict[str, str],
   embedding_index: Dict[str, np.ndarray],
-  return_stemmed_tokens=True,
+  return_tokens=True,
   return_found_ratio=False,
 ) -> Union[FileEmbeddings, Tuple]:
   file_embeddings: FileEmbeddings = {}
@@ -169,7 +172,7 @@ def get_embeddings(
     embedding, stemmed_tokens, found_ratio = get_embedding_of_file(
       file,
       embedding_index,
-      return_stemmed_tokens=True,
+      return_tokens=True,
       return_found_ratio=True,
     )
     file_embeddings[filename] = embedding
@@ -178,7 +181,7 @@ def get_embeddings(
 
   ret = [file_embeddings]
 
-  if return_stemmed_tokens:
+  if return_tokens:
     ret.append(file_tokens)
   if return_found_ratio:
     ret.append(found_ratios)
