@@ -1,7 +1,8 @@
 import os
 import pathlib
 import subprocess
-from typing import Dict, Generator, Tuple, Union, List, Iterable, Any
+from typing import Dict, Generator, Tuple, Union, List, Iterable, Any, Generic, \
+  TypeVar
 
 import numpy as np
 from keras.utils.data_utils import get_file
@@ -159,16 +160,19 @@ def get_embedding_of_file(
 
 
 def get_embeddings(
-  file_map: Dict[str, str],
+  file_map: Union[Dict[str, str], Generator[Tuple[str, str], None, None]],
   embedding_index: Dict[str, np.ndarray],
   return_tokens=True,
   return_found_ratio=False,
 ) -> Union[FileEmbeddings, Tuple]:
+  if isinstance(file_map, dict):
+    file_map = file_map.items()
+
   file_embeddings: FileEmbeddings = {}
   file_tokens = {}
   found_ratios = []
 
-  for filename, file in file_map.items():
+  for filename, file in file_map:
     embedding, stemmed_tokens, found_ratio = get_embedding_of_file(
       file,
       embedding_index,
@@ -192,3 +196,15 @@ def chop_dict(
   d: Dict[str, Any], keys: Iterable[str],
 ) -> Dict[str, Any]:
   return {key: d[key] for key in keys}
+
+
+_KT = TypeVar('_KT')
+_VT = TypeVar('_VT')
+
+
+def first_key_of(d: Dict[_KT, _VT]) -> _KT:
+  return next(iter(d.keys()))
+
+
+def first_value_of(d: Dict[_KT, _VT]) -> _VT:
+  return next(iter(d.values()))
