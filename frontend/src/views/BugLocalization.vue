@@ -1,10 +1,10 @@
 <template>
-  <div class="container">
+  <div class="container-fluid">
     <div class="row">
-      <div class="col col-3">
+      <div class="col col-4">
         <LeftPanel />
       </div>
-      <div class="col col-9">
+      <div class="col col-8">
         <WordToWordSimilarity v-if="$store.state.selectedFile" />
       </div>
     </div>

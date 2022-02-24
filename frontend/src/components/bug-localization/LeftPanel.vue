@@ -15,10 +15,38 @@
   <div class="mb-3" v-show="files.length">
     <label for="select-file" class="form-label">Select A File</label>
     <select v-model="selectedFile" class="form-control" id="select-file">
-      <option :key="file" v-for="file in files.slice(0, 100)" :value="file">
+      <option
+        :key="file"
+        v-for="file in files.slice(0, 100)"
+        :value="file"
+        :style="{ backgroundColor: getFileBackground(file) }"
+      >
         {{ file }}
       </option>
     </select>
+  </div>
+
+  <div class="mb-3" v-show="files.length">
+    <table class="table" style="word-break: break-word">
+      <thead>
+        <tr>
+          <th>Bug Location</th>
+          <th>Similarity Score</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          v-for="bugLocation in bugLocations"
+          :key="bugLocation[0]"
+          :style="{ backgroundColor: getFileBackground(bugLocation[0]) }"
+        >
+          <td>
+            <code style="color: darkslategrey">{{ bugLocation[0] }}</code>
+          </td>
+          <td>{{ bugLocation[1].toFixed(2) }}</td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 </template>
 
@@ -26,12 +54,15 @@
 import { SimilarityPayload } from "@/store";
 import axios from "axios";
 import { defineComponent } from "vue";
+import { scaleLinear, ScaleLinear } from "d3";
+import { mapState } from "vuex";
 
 type BugSummaryResponse = {
   bug_id: Record<string, number>;
   summary: Record<string, string>;
 };
 type BugSummary = { bug_id: number; summary: string };
+
 export default defineComponent({
   name: "LeftPanel",
   data() {
@@ -41,9 +72,7 @@ export default defineComponent({
   },
 
   computed: {
-    files(): string[] {
-      return Object.keys(this.$store.state.asymmetricSimilarity);
-    },
+    ...mapState(["bugLocations"]),
     selectedBug: {
       get() {
         return this.$store.state.selectedBug;
@@ -59,6 +88,23 @@ export default defineComponent({
       set(value) {
         this.$store.state.selectedFile = value;
       },
+    },
+    files(): string[] {
+      return Object.keys(this.$store.state.asymmetricSimilarity);
+    },
+    mostSimilarFilenames(): string[] {
+      return this.bugLocations.map((location: [string, number]) => location[0]);
+    },
+    mostSimilarSimilarities(): number[] {
+      return this.bugLocations.map((location: [string, number]) => location[1]);
+    },
+    colorScale(): ScaleLinear<string, string> {
+      const similarities = this.bugLocations
+        ? this.mostSimilarSimilarities
+        : [0];
+      return scaleLinear<string>()
+        .domain([Math.min(...similarities), Math.max(...similarities)])
+        .range(["lightyellow", "orangered"]);
     },
   },
 
@@ -78,6 +124,17 @@ export default defineComponent({
       bug_id,
       summary: resp.data.summary[i],
     }));
+  },
+
+  methods: {
+    getFileBackground(filename: string) {
+      const fileIndex = this.mostSimilarFilenames.indexOf(filename);
+      if (fileIndex === -1) {
+        return "white";
+      }
+
+      return this.colorScale(this.mostSimilarSimilarities[fileIndex]);
+    },
   },
 });
 </script>
