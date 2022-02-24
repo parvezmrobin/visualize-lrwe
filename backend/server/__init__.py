@@ -163,17 +163,13 @@ def get_word_similarities(bug_id):
   # reduce dimensionality
   bug_report_embedding_2d = pca.transform(bug_report_embedding)
   file_embedding_2d = {
-    filename: pca.transform(file_embeddings[filename])
+    filename: pca.transform(file_embeddings[filename][top_word_i_of[filename]])
     for filename in top_files
   }
 
   # select data for response
   resp_file_tokens = {
     filename: [file_tokens_of[filename][i] for i in top_word_i_of[filename]]
-    for filename in top_files
-  }
-  resp_file_embeddings = {
-    filename: file_embedding_2d[filename]
     for filename in top_files
   }
 
@@ -189,7 +185,7 @@ def get_word_similarities(bug_id):
 
   response = json.dumps({
     'fileTokens': resp_file_tokens,
-    'fileEmbedding': resp_file_embeddings,
+    'fileEmbeddings': file_embedding_2d,
     'bugReportTokens': bug_report_tokens,
     'bugReportEmbedding': bug_report_embedding_2d,
     'wordToWordSimilarities': resp_word_to_word_similarities,

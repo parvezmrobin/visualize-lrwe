@@ -37,7 +37,7 @@ export default defineComponent({
   computed: {
     ...mapState([
       "selectedFile",
-      "fileEmbedding",
+      "fileEmbeddings",
       "fileTokens",
       "bugReportEmbedding",
       "bugReportTokens",
@@ -71,7 +71,7 @@ export default defineComponent({
 
       d3.select(svg).selectAll("g").remove();
 
-      const fileEmbedding = this.fileEmbedding[this.selectedFile];
+      const fileEmbedding = this.fileEmbeddings[this.selectedFile];
       const min = Math.min(
         ...fileEmbedding.flat(),
         ...this.bugReportEmbedding.flat()
@@ -97,7 +97,7 @@ export default defineComponent({
         popper: HTMLDivElement,
         words: string[]
       ): ShowPopper => {
-        console.log("words", words);
+        console.assert(embedding.length === words.length);
         return (e: MouseEvent, point) => {
           const index = embedding.indexOf(point);
           const word = words[index];

@@ -12,15 +12,9 @@
     </select>
   </div>
 
-  <div class="mb-3">
+  <div class="mb-3" v-show="files.length">
     <label for="select-file" class="form-label">Select A File</label>
-    <select
-      v-show="files.length"
-      v-model="selectedFile"
-      class="form-control"
-      id="select-file"
-    >
-      <option value="" selected disabled>Select a file</option>
+    <select v-model="selectedFile" class="form-control" id="select-file">
       <option :key="file" v-for="file in files.slice(0, 100)" :value="file">
         {{ file }}
       </option>

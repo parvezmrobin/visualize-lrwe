@@ -2,11 +2,12 @@ import { createStore } from "vuex";
 
 export interface SimilarityPayload {
   asymmetricSimilarity: Record<string, number>;
+  bugLocations: [string, number][];
   bugReportEmbedding: [number, number][];
   bugReportToFileSimilarity: Record<string, number>;
   bugReportTokens: string[];
   bugWordToFileSimilarities: Record<string, number[]>;
-  fileEmbedding: Record<string, [number, number][]>;
+  fileEmbeddings: Record<string, [number, number][]>;
   fileToBugReportSimilarity: Record<string, number>;
   fileTokens: Record<string, string[]>;
   fileWordToBugSimilarity: Record<string, number[]>;
@@ -24,11 +25,12 @@ export default createStore<State>({
       selectedBug: "",
       selectedFile: "",
       asymmetricSimilarity: {},
+      bugLocations: [],
       bugReportEmbedding: [],
       bugReportToFileSimilarity: {},
       bugReportTokens: [],
       bugWordToFileSimilarities: {},
-      fileEmbedding: {},
+      fileEmbeddings: {},
       fileToBugReportSimilarity: {},
       fileTokens: {},
       fileWordToBugSimilarity: {},
@@ -39,13 +41,14 @@ export default createStore<State>({
   actions: {
     updateSimilarityData(self, similarityPayload: SimilarityPayload) {
       self.state.asymmetricSimilarity = similarityPayload.asymmetricSimilarity;
+      self.state.bugLocations = similarityPayload.bugLocations;
       self.state.bugReportEmbedding = similarityPayload.bugReportEmbedding;
       self.state.bugReportToFileSimilarity =
         similarityPayload.bugReportToFileSimilarity;
       self.state.bugReportTokens = similarityPayload.bugReportTokens;
       self.state.bugWordToFileSimilarities =
         similarityPayload.bugWordToFileSimilarities;
-      self.state.fileEmbedding = similarityPayload.fileEmbedding;
+      self.state.fileEmbeddings = similarityPayload.fileEmbeddings;
       self.state.fileToBugReportSimilarity =
         similarityPayload.fileToBugReportSimilarity;
       self.state.fileTokens = similarityPayload.fileTokens;
