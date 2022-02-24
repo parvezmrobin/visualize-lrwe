@@ -1,7 +1,7 @@
 import os
 import pathlib
 import subprocess
-from typing import Dict, Generator, Tuple, Union, List
+from typing import Dict, Generator, Tuple, Union, List, Iterable, Any
 
 import numpy as np
 from keras.utils.data_utils import get_file
@@ -185,10 +185,7 @@ def get_embeddings(
   return file_embeddings if len(ret) == 1 else ret
 
 
-def ndarray_dict_to_primitive(
-  d: Dict[str, np.ndarray], keys=None,
-) -> Dict[str, float]:
-  return {
-    key: d[key].tolist()
-    for key in keys or d.keys()
-  }
+def chop_dict(
+  d: Dict[str, Any], keys: Iterable[str],
+) -> Dict[str, Any]:
+  return {key: d[key] for key in keys}

@@ -11,7 +11,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 from server.utils import get_embedding_index, checkout_to, \
   get_java_files_from, get_embeddings, get_embedding_of_file, FileEmbeddings, \
-  ndarray_dict_to_primitive
+  chop_dict
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 assert os.getcwd().endswith('backend')
@@ -68,13 +68,6 @@ def get_word_similarities(bug_id):
   bug_report_embedding, bug_report_tokens = get_embedding_of_file(
     bug_report, embedding_index, return_stemmed_tokens=True,
   )
-
-  # reduce dimensionality
-  file_embedding_2d = {
-    filename: pca.transform(file_embedding).tolist()
-    for filename, file_embedding in file_embeddings.items()
-  }
-  bug_report_embedding_2d = pca.transform(bug_report_embedding).tolist()
 
   # compute similarities
   word_to_word_similarities: Dict[str, np.ndarray] = {
@@ -145,6 +138,13 @@ def get_word_similarities(bug_id):
     )[:100]
     top_word_i_of[filename] = most_similar_100_word_indices
 
+  # reduce dimensionality
+  file_embedding_2d = {
+    filename: pca.transform(file_embeddings[filename])
+    for filename in top_files
+  }
+  bug_report_embedding_2d = pca.transform(bug_report_embedding)
+
   # select data for response
   resp_file_tokens = {
     filename: [file_tokens_of[filename][i] for i in top_word_i_of[filename]]
@@ -156,14 +156,12 @@ def get_word_similarities(bug_id):
   }
 
   resp_word_to_word_similarities = {
-    filename: (word_to_word_similarities
-               [filename][:, top_word_i_of[filename]].tolist())
+    filename: (word_to_word_similarities[filename][:, top_word_i_of[filename]])
     for filename in top_files
   }
 
   resp_file_word_to_bug_similarity = {
-    filename: (file_word_to_bug_similarities
-               [filename][top_word_i_of[filename]].tolist())
+    filename: (file_word_to_bug_similarities[filename][top_word_i_of[filename]])
     for filename in top_files
   }
 
@@ -174,15 +172,16 @@ def get_word_similarities(bug_id):
     'bugReportEmbedding': bug_report_embedding_2d,
     'wordToWordSimilarities': resp_word_to_word_similarities,
     'fileWordToBugSimilarity': resp_file_word_to_bug_similarity,
-    'bugWordToFileSimilarities': ndarray_dict_to_primitive(
+    'bugWordToFileSimilarities': chop_dict(
       bug_word_to_file_similarities, top_files),
-    'bugReportToFileSimilarity': ndarray_dict_to_primitive(
-      bug_to_file_similarity, top_files),
-    'fileToBugReportSimilarity': ndarray_dict_to_primitive(
-      file_to_bug_similarity, top_files),
-    'asymmetricSimilarity': ndarray_dict_to_primitive(
-      asymmetric_similarity, top_files),
-  })
+    'bugReportToFileSimilarity': chop_dict(bug_to_file_similarity, top_files),
+    'fileToBugReportSimilarity': chop_dict(file_to_bug_similarity, top_files),
+    'asymmetricSimilarity': chop_dict(asymmetric_similarity, top_files),
+  }, default=_default_json_serializer)
 
   print('Response size:', len(response))
   return response
+
+
+def _default_json_serializer(o):
+  return o.round(6).tolist() if isinstance(o, np.ndarray) else o
