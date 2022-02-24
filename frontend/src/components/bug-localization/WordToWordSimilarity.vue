@@ -1,12 +1,16 @@
 <template>
   <div style="position: relative">
-    <svg ref="svg" @fullscreenchange="onFullScreenChange"></svg>
+    <svg
+      class="border border-info rounded"
+      ref="svg"
+      @fullscreenchange="onFullScreenChange"
+    ></svg>
     <div ref="popperBugReport" class="popper br" hidden></div>
     <div ref="popperFile" class="popper file" hidden></div>
     <button
       @click="makeFullScreen"
       ref="btnMax"
-      class="btn btn-outline-dark max"
+      class="btn btn-outline-info max"
       title="Make the graph full screen"
     >
       <svg
@@ -64,10 +68,19 @@ export default defineComponent({
         !!document.fullscreenElement;
     },
     drawSimilarity() {
+      if (!this.selectedFile) {
+        return;
+      }
       const DOT_RADIUS = 3;
 
       const svg = this.$refs.svg as SVGElement;
-      svg.style.height = `${svg.clientWidth}px`;
+      if (document.fullscreenElement) {
+        svg.style.height = `${svg.clientWidth}px`;
+      } else {
+        const size = Math.min(svg.clientWidth, window.innerHeight - 2);
+        svg.style.height = `${size}px`;
+        svg.style.width = `${size}px`;
+      }
 
       d3.select(svg).selectAll("g").remove();
 
@@ -171,7 +184,7 @@ svg {
 
   &:fullscreen {
     background-color: white;
-    width: 100vh;
+    width: 100vh !important;
     position: fixed;
     top: 0;
     z-index: 100;

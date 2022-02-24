@@ -12,7 +12,7 @@
     </select>
   </div>
 
-  <div class="mb-3" v-show="files.length">
+  <div class="mb-3 col-auto" v-show="files.length">
     <label for="select-file" class="form-label">Select A File</label>
     <select v-model="selectedFile" class="form-control" id="select-file">
       <option
@@ -26,7 +26,7 @@
     </select>
   </div>
 
-  <div class="mb-3" v-show="files.length">
+  <div class="mb-3 col-auto" v-show="files.length">
     <table class="table" style="word-break: break-word">
       <thead>
         <tr>
@@ -110,6 +110,8 @@ export default defineComponent({
 
   watch: {
     async selectedBug() {
+      this.selectedFile = "";
+      this.$store.state.asymmetricSimilarity = {};
       const resp = await axios.get<SimilarityPayload>(
         encodeURI(`/bug/${this.selectedBug}/similarities`)
       );

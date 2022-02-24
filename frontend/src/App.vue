@@ -1,5 +1,5 @@
 <template>
-  <div id="nav">
+  <div id="nav" v-show="$route.path !== '/bug-localization'">
     <router-link to="/">Home</router-link> |
     <router-link to="/bug-localization">Bug Localization</router-link> |
     <router-link to="/custom-drawing">Custom Drawing</router-link>
@@ -12,11 +12,11 @@
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
   color: #2c3e50;
 }
 
 #nav {
+  text-align: center;
   padding: 30px;
 
   a {
