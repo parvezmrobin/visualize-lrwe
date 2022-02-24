@@ -129,14 +129,14 @@ export default defineComponent({
   height: calc(100vh - 100px);
 }
 
-:deep svg {
+:deep(svg) {
   flex-grow: 1;
   border: 2px solid cornflowerblue;
   border-radius: 5px;
   width: 100%;
 }
 
-:deep .d-flex {
+:deep(.d-flex) {
   display: flex;
   padding: 12px;
   > div {
@@ -144,11 +144,11 @@ export default defineComponent({
   }
 }
 
-:deep label {
+:deep(label) {
   padding-right: 12px;
 }
 
-:deep .draggable {
+:deep(.draggable) {
   cursor: move;
 }
 </style>
