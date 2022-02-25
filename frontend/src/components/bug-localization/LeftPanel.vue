@@ -41,7 +41,9 @@
           :style="{ backgroundColor: getFileBackground(bugLocation[0]) }"
         >
           <td>
-            <code style="color: darkslategrey">{{ bugLocation[0] }}</code>
+            <code :style="{ color: getFileForeground(bugLocation[0]) }">
+              {{ bugLocation[0] }}
+            </code>
           </td>
           <td>{{ bugLocation[1].toFixed(2) }}</td>
         </tr>
@@ -104,7 +106,7 @@ export default defineComponent({
         : [0];
       return scaleLinear<string>()
         .domain([Math.min(...similarities), Math.max(...similarities)])
-        .range(["lightyellow", "orangered"]);
+        .range(["lightyellow", "coral"]);
     },
   },
 
@@ -135,7 +137,19 @@ export default defineComponent({
         return "white";
       }
 
-      return this.colorScale(this.mostSimilarSimilarities[fileIndex]);
+      const backgroundColor = this.colorScale(
+        this.mostSimilarSimilarities[fileIndex]
+      );
+      return backgroundColor;
+    },
+
+    getFileForeground(filename: string) {
+      const background = this.getFileBackground(filename);
+      const values = background
+        .match(/rgb\((\d+), (\d+), (\d+)\)/)
+        ?.slice(1)
+        .map((v) => 255 - Number.parseInt(v));
+      return `rgb(${values?.join(", ")})`;
     },
   },
 });
