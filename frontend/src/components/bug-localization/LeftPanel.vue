@@ -50,6 +50,23 @@
       </tbody>
     </table>
   </div>
+
+  <!--  Loading indicator -->
+  <div ref="loadingModal" class="modal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-body d-flex justify-content-center">
+          <div
+            class="spinner-grow text-info"
+            style="width: 5rem; height: 5rem"
+            role="status"
+          >
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script lang="ts">
@@ -58,6 +75,7 @@ import axios from "axios";
 import { defineComponent } from "vue";
 import { scaleLinear, ScaleLinear } from "d3";
 import { mapState } from "vuex";
+import { Modal } from "bootstrap";
 
 type BugSummaryResponse = {
   bug_id: Record<string, number>;
@@ -112,6 +130,11 @@ export default defineComponent({
 
   watch: {
     async selectedBug() {
+      const loadingModal = Modal.getOrCreateInstance(
+        this.$refs.loadingModal as HTMLDivElement
+      );
+      loadingModal.show();
+
       this.selectedFile = "";
       this.$store.state.asymmetricSimilarity = {};
       const resp = await axios.get<SimilarityPayload>(
@@ -119,6 +142,8 @@ export default defineComponent({
       );
       console.log(resp.data);
       await this.$store.dispatch("updateSimilarityData", resp.data);
+
+      loadingModal.hide();
     },
   },
 
@@ -155,4 +180,10 @@ export default defineComponent({
 });
 </script>
 
-<style scoped></style>
+<style scoped>
+.modal-content {
+  background-color: transparent;
+  border: none;
+}
+
+</style>
