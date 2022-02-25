@@ -1,3 +1,4 @@
+import gc
 import json
 import os
 from typing import Dict, List
@@ -198,7 +199,7 @@ def get_word_similarities(bug_id):
     'bugLocations': bug_locations,
   }, default=_default_json_serializer)
 
-  print('Response size:', len(response))
+  print('Response size:', len(response), gc.collect())
   return response
 
 
