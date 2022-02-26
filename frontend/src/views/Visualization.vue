@@ -7,20 +7,27 @@
         class="breadcrumb-item"
         :class="{ active: tab !== activeTab }"
       >
-        <a href="#" v-if="tab !== activeTab">{{ tab }}</a>
+        <a href="#" v-if="tab !== activeTab" @click="activeTab = tab">
+          {{ tab }}
+        </a>
         <template v-else> {{ tab }}</template>
       </li>
     </ol>
   </nav>
-  <WordToWordSimilarity :fileColor="fileColor" />
+  <WordToWordSimilarity
+    v-if="activeTab === 'Word To Word Similarity'"
+    :fileColor="fileColor"
+  />
+  <WordToFileSimilarity v-else-if="activeTab === 'Word To File Similarity'" />
 </template>
 <script lang="ts">
 import WordToWordSimilarity from "@/components/bug-localization/WordToWordSimilarity.vue";
+import WordToFileSimilarity from "@/views/WordToFileSimilarity.vue";
 import { defineComponent, PropType } from "vue";
 
 export default defineComponent({
   name: "Visualization",
-  components: { WordToWordSimilarity },
+  components: { WordToFileSimilarity, WordToWordSimilarity },
   props: {
     fileColor: {
       type: Object as PropType<Record<string, [string, string]>>,

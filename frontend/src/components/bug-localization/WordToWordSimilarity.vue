@@ -49,10 +49,11 @@
 </template>
 
 <script lang="ts">
+import { computeSvgSize } from "@/components/bug-localization/utils";
+import { createPopper } from "@popperjs/core";
 import * as d3 from "d3";
 import { defineComponent, PropType } from "vue";
 import { mapState } from "vuex";
-import { createPopper } from "@popperjs/core";
 
 export default defineComponent({
   name: "WordToWordSimilarity",
@@ -109,17 +110,10 @@ export default defineComponent({
       const DOT_RADIUS = 3;
 
       const svg = this.$refs.svg as SVGElement;
-      if (document.fullscreenElement) {
-        svg.style.height = `${svg.clientWidth}px`;
-        (this.$refs.btnMax as HTMLButtonElement).style.left = `${
-          svg.clientWidth - 42
-        }px`;
-      } else {
-        const size = Math.min(svg.clientWidth, window.innerHeight - 130);
-        svg.style.height = `${size}px`;
-        svg.style.width = `${size}px`;
-        (this.$refs.btnMax as HTMLButtonElement).style.left = `${size - 42}px`;
-      }
+      const size = computeSvgSize(svg);
+      svg.style.height = `${size}px`;
+      svg.style.width = `${size}px`;
+      (this.$refs.btnMax as HTMLButtonElement).style.left = `${size - 42}px`;
 
       d3.select(svg).selectAll("g").remove();
 
