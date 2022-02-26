@@ -37,6 +37,11 @@
     </table>
   </div>
 
+  <div
+    class="border border-secondary position-fixed"
+    style="left: 33vw; top: 0; height: 100vh"
+  />
+
   <!--  Loading indicator -->
   <div ref="loadingModal" class="modal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
