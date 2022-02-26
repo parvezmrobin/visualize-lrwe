@@ -12,21 +12,7 @@
     </select>
   </div>
 
-  <div class="mb-3 col-auto" v-show="files.length">
-    <label for="select-file" class="form-label">Select A File</label>
-    <select v-model="selectedFile" class="form-control" id="select-file">
-      <option
-        :key="file"
-        v-for="file in files.slice(0, 100)"
-        :value="file"
-        :style="{ backgroundColor: getFileBackground(file) }"
-      >
-        {{ file }}
-      </option>
-    </select>
-  </div>
-
-  <div class="mb-3 col-auto" v-show="files.length">
+  <div class="mb-3 col-auto" v-show="bugLocations.length">
     <table class="table" style="word-break: break-word">
       <thead>
         <tr>
@@ -38,10 +24,10 @@
         <tr
           v-for="bugLocation in bugLocations"
           :key="bugLocation[0]"
-          :style="{ backgroundColor: getFileBackground(bugLocation[0]) }"
+          :style="{ backgroundColor: fileColor[bugLocation[0]][0] }"
         >
           <td>
-            <code :style="{ color: getFileForeground(bugLocation[0]) }">
+            <code :style="{ color: fileColor[bugLocation[0]][1] }">
               {{ bugLocation[0] }}
             </code>
           </td>
@@ -72,10 +58,9 @@
 <script lang="ts">
 import { SimilarityPayload } from "@/store";
 import axios from "axios";
-import { defineComponent } from "vue";
-import { scaleLinear, ScaleLinear } from "d3";
-import { mapState } from "vuex";
 import { Modal } from "bootstrap";
+import { defineComponent, PropType } from "vue";
+import { mapState } from "vuex";
 
 type BugSummaryResponse = {
   bug_id: Record<string, number>;
@@ -85,6 +70,12 @@ type BugSummary = { bug_id: number; summary: string };
 
 export default defineComponent({
   name: "LeftPanel",
+  props: {
+    fileColor: {
+      type: Object as PropType<Record<string, [string, string]>>,
+      required: true,
+    },
+  },
   data() {
     return {
       bugs: [] as BugSummary[],
@@ -97,34 +88,9 @@ export default defineComponent({
       get() {
         return this.$store.state.selectedBug;
       },
-      set(value) {
+      set(value: number) {
         this.$store.state.selectedBug = value;
       },
-    },
-    selectedFile: {
-      get() {
-        return this.$store.state.selectedFile;
-      },
-      set(value) {
-        this.$store.state.selectedFile = value;
-      },
-    },
-    files(): string[] {
-      return Object.keys(this.$store.state.asymmetricSimilarity);
-    },
-    mostSimilarFilenames(): string[] {
-      return this.bugLocations.map((location: [string, number]) => location[0]);
-    },
-    mostSimilarSimilarities(): number[] {
-      return this.bugLocations.map((location: [string, number]) => location[1]);
-    },
-    colorScale(): ScaleLinear<string, string> {
-      const similarities = this.bugLocations
-        ? this.mostSimilarSimilarities
-        : [0];
-      return scaleLinear<string>()
-        .domain([Math.min(...similarities), Math.max(...similarities)])
-        .range(["lightyellow", "coral"]);
     },
   },
 
@@ -135,7 +101,7 @@ export default defineComponent({
       );
       loadingModal.show();
 
-      this.selectedFile = "";
+      this.$store.state.selectedFile = "";
       this.$store.state.asymmetricSimilarity = {};
       const resp = await axios.get<SimilarityPayload>(
         encodeURI(`/bug/${this.selectedBug}/similarities`)
@@ -154,29 +120,6 @@ export default defineComponent({
       summary: resp.data.summary[i],
     }));
   },
-
-  methods: {
-    getFileBackground(filename: string) {
-      const fileIndex = this.mostSimilarFilenames.indexOf(filename);
-      if (fileIndex === -1) {
-        return "white";
-      }
-
-      const backgroundColor = this.colorScale(
-        this.mostSimilarSimilarities[fileIndex]
-      );
-      return backgroundColor;
-    },
-
-    getFileForeground(filename: string) {
-      const background = this.getFileBackground(filename);
-      const values = background
-        .match(/rgb\((\d+), (\d+), (\d+)\)/)
-        ?.slice(1)
-        .map((v) => 255 - Number.parseInt(v));
-      return `rgb(${values?.join(", ")})`;
-    },
-  },
 });
 </script>
 
@@ -185,5 +128,4 @@ export default defineComponent({
   background-color: transparent;
   border: none;
 }
-
 </style>

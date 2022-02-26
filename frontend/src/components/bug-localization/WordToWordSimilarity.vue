@@ -1,12 +1,30 @@
 <template>
+  <div class="mb-3 row" v-show="files.length">
+    <label for="select-file" class="col-sm-3 col-lg-2 col-form-label"
+      >Select A File</label
+    >
+    <div class="col-sm-9 col-lg-10">
+      <select v-model="selectedFile" class="form-control" id="select-file">
+        <option
+          :key="file"
+          v-for="file in files.slice(0, 100)"
+          :value="file"
+          :style="{ backgroundColor: getFileBackground(file) }"
+        >
+          {{ file }}
+        </option>
+      </select>
+    </div>
+  </div>
+
+  <!--  Using relative position to position maximize icon properly-->
   <div style="position: relative">
     <svg
+      v-show="selectedFile"
       class="border border-info rounded"
       ref="svg"
       @fullscreenchange="onFullScreenChange"
     ></svg>
-    <div ref="popperBugReport" class="popper br" hidden></div>
-    <div ref="popperFile" class="popper file" hidden></div>
     <button
       @click="makeFullScreen"
       ref="btnMax"
@@ -26,34 +44,52 @@
         />
       </svg>
     </button>
+    <div ref="popperBugReport" class="popper br" hidden></div>
+    <div ref="popperFile" class="popper file" hidden></div>
   </div>
 </template>
 
 <script lang="ts">
 import * as d3 from "d3";
-import { defineComponent } from "vue";
+import { defineComponent, PropType } from "vue";
 import { mapState } from "vuex";
 import { createPopper } from "@popperjs/core";
 
 export default defineComponent({
   name: "WordToWordSimilarity",
 
+  props: {
+    fileColor: {
+      type: Object as PropType<Record<string, [string, string]>>,
+      required: true,
+    },
+  },
+
   computed: {
     ...mapState([
-      "selectedFile",
       "fileEmbeddings",
       "fileTokens",
       "bugReportEmbedding",
       "bugReportTokens",
       "wordToWordSimilarities",
     ]),
+    selectedFile: {
+      get() {
+        return this.$store.state.selectedFile;
+      },
+      set(value: string) {
+        this.$store.state.selectedFile = value;
+      },
+    },
+    files(): string[] {
+      return Object.keys(this.$store.state.asymmetricSimilarity);
+    },
   },
 
   watch: {
-    selectedFile() {
-      if (this.wordToWordSimilarities) {
-        this.drawSimilarity();
-      }
+    async selectedFile() {
+      await this.$nextTick(); // let the svg to show
+      this.drawSimilarity();
     },
   },
 
@@ -76,10 +112,14 @@ export default defineComponent({
       const svg = this.$refs.svg as SVGElement;
       if (document.fullscreenElement) {
         svg.style.height = `${svg.clientWidth}px`;
+        (this.$refs.btnMax as HTMLButtonElement).style.left = `${
+          svg.clientWidth - 42
+        }px`;
       } else {
-        const size = Math.min(svg.clientWidth, window.innerHeight - 2);
+        const size = Math.min(svg.clientWidth, window.innerHeight - 160);
         svg.style.height = `${size}px`;
         svg.style.width = `${size}px`;
+        (this.$refs.btnMax as HTMLButtonElement).style.left = `${size - 42}px`;
       }
 
       d3.select(svg).selectAll("g").remove();
@@ -170,6 +210,24 @@ export default defineComponent({
           popper.hidden = true;
         });
     },
+
+    getFileBackground(filename: string) {
+      const fileColor = this.fileColor[filename];
+      if (!fileColor) {
+        return "transparent";
+      }
+
+      return fileColor[0];
+    },
+
+    getFileForeground(filename: string) {
+      const fileColor = this.fileColor[filename];
+      if (!fileColor) {
+        return "black";
+      }
+
+      return fileColor[1];
+    },
   },
 
   mounted(): void {
@@ -209,6 +267,5 @@ svg {
 .btn.max {
   position: absolute;
   top: 0;
-  right: 0;
 }
 </style>
