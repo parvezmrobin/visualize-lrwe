@@ -22,9 +22,12 @@ export default defineComponent({
   name: "BugLocalization",
   components: { Visualization, LeftPanel },
   computed: {
-    ...mapState(["bugLocations"]),
-    colorScale(): ScaleLinear<string, string> {
-      const similarities = this.bugLocations.map(
+    ...mapState(["similarity"]),
+    colorScale(): ScaleLinear<string, string> | undefined {
+      if (!this.similarity) {
+        return undefined;
+      }
+      const similarities = this.similarity.bugLocations.map(
         (location: [string, number]) => location[1]
       );
       return scaleLinear<string>()
@@ -33,8 +36,11 @@ export default defineComponent({
     },
     fileColor(): Record<string, string> {
       const fileColor: Record<string, string> = {};
-      for (const [filename] of this.bugLocations) {
-        const similarity = this.bugLocations.find(
+      if (!this.colorScale) {
+        return fileColor;
+      }
+      for (const [filename] of this.similarity.bugLocations) {
+        const similarity = this.similarity.bugLocations.find(
           (location: string) => location[0] === filename
         )[1];
         fileColor[filename] = this.colorScale(similarity);

@@ -7,7 +7,19 @@
     <router-link to="/custom-drawing">Custom Drawing</router-link>
   </div>
   <router-view />
+
+  <LoadingModal />
 </template>
+
+<script lang="ts">
+import LoadingModal from "@/components/bug-localization/LoadingModal.vue";
+import { defineComponent } from "vue";
+
+export default defineComponent({
+  name: "App",
+  components: { LoadingModal },
+});
+</script>
 
 <style lang="scss">
 $body-bg: #212529 !default;

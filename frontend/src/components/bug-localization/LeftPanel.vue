@@ -12,7 +12,7 @@
     </select>
   </div>
 
-  <div class="mb-3 col-auto" v-show="bugLocations.length">
+  <div class="mb-3 col-auto" v-if="similarity">
     <table class="table" style="word-break: break-word">
       <thead>
         <tr>
@@ -22,7 +22,7 @@
       </thead>
       <tbody>
         <tr
-          v-for="bugLocation in bugLocations"
+          v-for="bugLocation in similarity.bugLocations"
           :key="bugLocation[0]"
           :style="{ backgroundColor: fileColor[bugLocation[0]] }"
         >
@@ -41,29 +41,11 @@
     class="border border-secondary position-fixed"
     style="left: 33vw; top: 0; height: 100vh"
   />
-
-  <!--  Loading indicator -->
-  <div ref="loadingModal" class="modal" tabindex="-1" data-bs-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-body d-flex justify-content-center">
-          <div
-            class="spinner-grow text-info"
-            style="width: 5rem; height: 5rem"
-            role="status"
-          >
-            <span class="visually-hidden">Loading...</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 </template>
 
 <script lang="ts">
 import { SimilarityPayload } from "@/store";
 import axios from "axios";
-import { Modal } from "bootstrap";
 import { defineComponent, PropType } from "vue";
 import { mapState } from "vuex";
 
@@ -88,7 +70,7 @@ export default defineComponent({
   },
 
   computed: {
-    ...mapState(["bugLocations"]),
+    ...mapState(["similarity"]),
     selectedBug: {
       get() {
         return this.$store.state.selectedBug;
@@ -101,20 +83,17 @@ export default defineComponent({
 
   watch: {
     async selectedBug() {
-      const loadingModal = Modal.getOrCreateInstance(
-        this.$refs.loadingModal as HTMLDivElement
-      );
-      loadingModal.show();
-
+      this.$store.state.isLoading = true;
       this.$store.state.selectedFile = "";
-      this.$store.state.asymmetricSimilarity = {};
+      this.$store.state.similarity = undefined;
+      this.$store.state.tSNE = undefined;
       const resp = await axios.get<SimilarityPayload>(
         encodeURI(`/bug/${this.selectedBug}/similarities`)
       );
       console.log(resp.data);
       await this.$store.dispatch("updateSimilarityData", resp.data);
 
-      loadingModal.hide();
+      this.$store.state.isLoading = false;
     },
   },
 
@@ -127,10 +106,3 @@ export default defineComponent({
   },
 });
 </script>
-
-<style scoped>
-.modal-content {
-  background-color: transparent;
-  border: none;
-}
-</style>

@@ -34,7 +34,7 @@
 
 <script lang="ts">
 import { computeSvgSize } from "@/components/bug-localization/utils";
-import { State } from "@/store";
+import { SimilarityPayload, State } from "@/store";
 import * as d3 from "d3";
 import { defineComponent } from "vue";
 import { mapState } from "vuex";
@@ -50,8 +50,10 @@ export default defineComponent({
   computed: {
     ...mapState({
       bugWordToFileSimilarities: (state) =>
-        (state as State).bugWordToFileSimilarities,
-      bugReportTokens: (state) => (state as State).bugReportTokens,
+        ((state as State).similarity as SimilarityPayload)
+          .bugWordToFileSimilarities,
+      bugReportTokens: (state) =>
+        ((state as State).similarity as SimilarityPayload).bugReportTokens,
     }),
   },
   watch: {

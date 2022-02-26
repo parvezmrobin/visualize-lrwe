@@ -3,7 +3,7 @@
     <label for="select-file" class="col-sm-3 col-lg-2 col-form-label"
       >Select A File</label
     >
-    <div class="col-sm-9 col-lg-10">
+    <div class="col-sm-6">
       <select v-model="selectedFile" class="form-control" id="select-file">
         <option
           :key="file"
@@ -14,6 +14,29 @@
           {{ file }}
         </option>
       </select>
+    </div>
+
+    <div class="col-sm-3 col-lg-4 d-flex align-items-center">
+      <div class="form-check form-check-inline">
+        <input
+          class="form-check-input"
+          type="radio"
+          id="pca"
+          value="pca"
+          v-model="dimension"
+        />
+        <label class="form-check-label" for="pca">PCA</label>
+      </div>
+      <div class="form-check form-check-inline">
+        <input
+          class="form-check-input"
+          type="radio"
+          id="tsne"
+          value="tsne"
+          v-model="dimension"
+        />
+        <label class="form-check-label" for="tsne">t-SNE</label>
+      </div>
     </div>
   </div>
 
@@ -50,7 +73,9 @@
 
 <script lang="ts">
 import { computeSvgSize } from "@/components/bug-localization/utils";
+import { TSNEPayload } from "@/store";
 import { createPopper } from "@popperjs/core";
+import axios from "axios";
 import * as d3 from "d3";
 import { defineComponent, PropType } from "vue";
 import { mapState } from "vuex";
@@ -65,14 +90,14 @@ export default defineComponent({
     },
   },
 
+  data() {
+    return {
+      dimension: "pca",
+    };
+  },
+
   computed: {
-    ...mapState([
-      "fileEmbeddings",
-      "fileTokens",
-      "bugReportEmbedding",
-      "bugReportTokens",
-      "wordToWordSimilarities",
-    ]),
+    ...mapState(["selectedBug", "similarity", "tSNE"]),
     selectedFile: {
       get() {
         return this.$store.state.selectedFile;
@@ -82,13 +107,32 @@ export default defineComponent({
       },
     },
     files(): string[] {
-      return Object.keys(this.$store.state.asymmetricSimilarity);
+      return Object.keys(this.similarity?.asymmetricSimilarity || {});
     },
   },
 
   watch: {
+    selectedBug() {
+      this.dimension = "pca";
+    },
     async selectedFile() {
       await this.$nextTick(); // let the svg to show
+      this.drawSimilarity();
+    },
+    async dimension() {
+      if (this.dimension === "tsne" && !this.tSNE) {
+        this.$store.state.isLoading = true;
+        const resp = await axios.post<TSNEPayload>(
+          `/bug/${this.selectedBug}/tsne`,
+          {
+            filenames: Object.keys(this.similarity?.asymmetricSimilarity),
+            topWordIndices: this.similarity?.topWordIndices,
+          }
+        );
+        await this.$store.dispatch("updateTSNEData", resp.data);
+        this.$store.state.isLoading = false;
+      }
+
       this.drawSimilarity();
     },
   },
@@ -104,7 +148,7 @@ export default defineComponent({
         !!document.fullscreenElement;
     },
     drawSimilarity() {
-      if (!this.selectedFile) {
+      if (!this.similarity || !this.selectedFile) {
         return;
       }
       const DOT_RADIUS = 3;
@@ -117,14 +161,22 @@ export default defineComponent({
 
       d3.select(svg).selectAll("g").remove();
 
-      const fileEmbedding = this.fileEmbeddings[this.selectedFile];
+      let fileEmbedding: [number, number][];
+      let bugReportEmbedding: [number, number][];
+      if (this.dimension === "pca") {
+        fileEmbedding = this.similarity.fileEmbeddingsPCA[this.selectedFile];
+        bugReportEmbedding = this.similarity.bugReportEmbeddingPCA;
+      } else {
+        fileEmbedding = this.tSNE.fileEmbeddingsTSNE[this.selectedFile];
+        bugReportEmbedding = this.tSNE.bugReportEmbeddingTSNE;
+      }
       const min = Math.min(
         ...fileEmbedding.flat(),
-        ...this.bugReportEmbedding.flat()
+        ...bugReportEmbedding.flat()
       );
       const max = Math.max(
         ...fileEmbedding.flat(),
-        ...this.bugReportEmbedding.flat()
+        ...bugReportEmbedding.flat()
       );
       const xScale = d3
         .scaleLinear()
@@ -172,7 +224,7 @@ export default defineComponent({
           createShowPopperFunction(
             fileEmbedding,
             this.$refs.popperFile as HTMLDivElement,
-            this.fileTokens[this.selectedFile]
+            this.similarity.fileTokens[this.selectedFile]
           )
         )
         .on("mouseout", () => {
@@ -183,7 +235,7 @@ export default defineComponent({
       d3.select(svg)
         .append("g")
         .selectAll(".br.dot")
-        .data<[number, number]>(this.bugReportEmbedding)
+        .data<[number, number]>(bugReportEmbedding)
         .enter()
         .append("circle")
         .attr("cx", (d) => xScale(d[0]))
@@ -193,9 +245,9 @@ export default defineComponent({
         .on(
           "mouseenter",
           createShowPopperFunction(
-            this.bugReportEmbedding,
+            bugReportEmbedding,
             this.$refs.popperBugReport as HTMLDivElement,
-            this.bugReportTokens
+            this.similarity.bugReportTokens
           )
         )
         .on("mouseout", () => {

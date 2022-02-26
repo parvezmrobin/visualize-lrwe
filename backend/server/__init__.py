@@ -5,9 +5,10 @@ from typing import Dict, List
 
 import numpy as np
 import pandas as pd
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
 from sklearn.metrics.pairwise import cosine_similarity
 
 from server.utils import get_embedding_index, checkout_to, \
@@ -32,7 +33,8 @@ print('Loaded embedding.')
 
 pca = PCA(n_components=2)
 pca.fit(np.stack(list(embedding_index.values()), axis=0))
-print('Initiated PCA.')
+t_sne = TSNE(n_components=2, learning_rate='auto', init='random')
+print('Initiated PCA & tSNE.')
 
 file_embeddings: FileEmbeddings
 file_tokens_of: Dict[str, List[str]]
@@ -50,6 +52,35 @@ print('Bootstrapped.')
 def get_bug_ids():
   summary = tomcat_df[['bug_id', 'summary']].to_dict()
   return jsonify(summary)
+
+
+@app.route('/bug/<bug_id>/tsne', methods=['POST'])
+def get_tsne_dimensions(bug_id):
+  bug_row = tomcat_df[tomcat_df.bug_id == int(bug_id)].iloc[0]
+  bug_report = bug_row.summary
+  if isinstance(bug_row.description, str):
+    bug_report += ('\n' + bug_row.description)
+
+  bug_report_embedding = get_embedding_of_file(bug_report, embedding_index)
+
+  filenames = request.json['filenames']
+  top_word_indices = request.json['topWordIndices']
+
+  bug_report_embedding_2d = t_sne.fit_transform(bug_report_embedding)
+  file_embedding_2d = {
+    filename: t_sne.fit_transform(
+      file_embeddings[filename][top_word_indices[filename]],
+    )
+    for filename in filenames
+  }
+
+  response = json.dumps({
+    'fileEmbeddingsTSNE': file_embedding_2d,
+    'bugReportEmbeddingTSNE': bug_report_embedding_2d,
+  }, default=_default_json_serializer)
+
+  print(f'Response size: {len(response) / 1024 ** 2:3f}', gc.collect())
+  return response
 
 
 @app.route('/bug/<bug_id>/similarities')
@@ -188,10 +219,11 @@ def get_word_similarities(bug_id):
 
   response = json.dumps({
     'fileTokens': resp_file_tokens,
-    'fileEmbeddings': file_embedding_2d,
+    'fileEmbeddingsPCA': file_embedding_2d,
     'bugReportTokens': bug_report_tokens,
-    'bugReportEmbedding': bug_report_embedding_2d,
+    'bugReportEmbeddingPCA': bug_report_embedding_2d,
     'wordToWordSimilarities': resp_word_to_word_similarities,
+    'topWordIndices': top_word_i_of,
     'fileWordToBugSimilarity': resp_file_word_to_bug_similarity,
     'bugWordToFileSimilarities': chop_dict(
       bug_word_to_file_similarities, top_files),
@@ -201,7 +233,7 @@ def get_word_similarities(bug_id):
     'bugLocations': bug_locations,
   }, default=_default_json_serializer)
 
-  print('Response size:', len(response), gc.collect())
+  print(f'Response size: {len(response) / 1024 ** 2:3f}', gc.collect())
   return response
 
 
