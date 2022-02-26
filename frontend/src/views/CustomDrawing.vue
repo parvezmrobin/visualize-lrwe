@@ -116,6 +116,17 @@ export default defineComponent({
 </script>
 
 <style scoped lang="scss">
+input,
+select {
+  border: none;
+  border-bottom: 1px solid slategrey;
+}
+
+input[type="number"],
+input[type="text"] {
+  width: 80px;
+}
+
 .d-flex-col {
   display: flex;
   flex-direction: column;
