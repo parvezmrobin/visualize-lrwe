@@ -1,34 +1,32 @@
 import os
-import pathlib
+import re
 import subprocess
-from typing import Dict, Generator, Tuple, Union, List, Iterable, Any, Generic, \
-  TypeVar
+import urllib.request
+from typing import Dict, Generator, Tuple, Union, Iterable, Any, TypeVar
+from zipfile import ZipFile
 
 import numpy as np
-from keras.utils.data_utils import get_file
-import re
-
-from nltk.tokenize import wordpunct_tokenize
-from nltk.stem import PorterStemmer
 from nltk.corpus import stopwords as stopwords_loader
+from nltk.stem import PorterStemmer
+from nltk.tokenize import wordpunct_tokenize
 
 EMBEDDING_DIMENSION = 100
 _stemmer = PorterStemmer()
 stopwords = stopwords_loader.words('english')
 
 
-def ensure_glove_embedding(verbose=False):
-  embedding_data_path = get_file(
-    'glove.6B.zip',
-    'https://nlp.stanford.edu/data/glove.6B.zip',
-    untar=True,
-    extract=True,
-  )
+def ensure_glove_embedding(verbose=False, directory='.'):
+  filename = os.path.join(directory, 'glove.6B.zip')
+  url = 'https://nlp.stanford.edu/data/glove.6B.zip'
+  if not os.path.isfile(filename):
+    print('Downloading GloVe embedding to', directory)
+    urllib.request.urlretrieve(url, filename)
+  with ZipFile(filename, 'r') as zipfile:
+    zipfile.extractall(directory)
 
   # If this operation fails, print the parent-dir
   # go there, and extract the file
-  file_path = pathlib.Path(
-    embedding_data_path).parent / f'glove.6B.{EMBEDDING_DIMENSION}d.txt'
+  file_path = f'{directory}/glove.6B.{EMBEDDING_DIMENSION}d.txt'
 
   if verbose:
     with open(file_path, encoding='utf-8') as glove_embedding_file:
@@ -47,7 +45,7 @@ def ensure_glove_embedding(verbose=False):
 FileEmbeddings = Dict[str, np.ndarray]
 
 
-def create_embedding_index(embedding_file_path: pathlib.Path, verbose=False):
+def create_embedding_index(embedding_file_path: str, verbose=False):
   if verbose:
     from tqdm import tqdm
 
@@ -75,8 +73,10 @@ def create_embedding_index(embedding_file_path: pathlib.Path, verbose=False):
   return _embedding_index
 
 
-def get_embedding_index():
-  return create_embedding_index(ensure_glove_embedding())
+def get_embedding_index(verbose=False, directory='.'):
+  return create_embedding_index(ensure_glove_embedding(
+    verbose=verbose, directory=directory
+  ))
 
 
 def checkout_to(commit, cwd):

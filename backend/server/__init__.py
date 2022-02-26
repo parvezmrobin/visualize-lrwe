@@ -27,7 +27,7 @@ dataframes: Dict[str, pd.DataFrame] = {}
 tomcat_df = pd.read_excel(TOMCAT_DATA_FILE, 0)
 dataframes['tomcat'] = tomcat_df
 
-embedding_index = get_embedding_index()
+embedding_index = get_embedding_index(directory='dataset')
 print('Loaded embedding.')
 
 pca = PCA(n_components=2)
