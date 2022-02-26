@@ -1,4 +1,32 @@
 <template>
+  <div class="mb-3 row">
+    <label for="num-file" class="col-sm-4 col-form-label">
+      Number of Files to Show
+    </label>
+    <div class="col-sm-2">
+      <input
+        type="number"
+        v-model.number="numFile"
+        name="num-file"
+        id="num-file"
+        class="form-control"
+      />
+    </div>
+
+    <label for="num-edge" class="col-sm-4 col-form-label">
+      Number of Edges to Show
+    </label>
+    <div class="col-sm-2">
+      <input
+        type="number"
+        v-model.number="numEdge"
+        name="num-edge"
+        id="num-edge"
+        class="form-control"
+      />
+    </div>
+  </div>
+
   <div class="position-relative">
     <svg ref="svg" class="border border-info rounded"></svg>
   </div>
@@ -13,22 +41,44 @@ import { mapState } from "vuex";
 
 export default defineComponent({
   name: "WordToFileSimilarity",
+  data() {
+    return {
+      numFile: 10,
+      numEdge: 50,
+    };
+  },
   computed: {
     ...mapState({
       bugWordToFileSimilarities: (state) =>
         (state as State).bugWordToFileSimilarities,
       bugReportTokens: (state) => (state as State).bugReportTokens,
     }),
-    bugLocations(): string[] {
-      return this.$store.state.bugLocations.map(([file]) => file);
-    },
   },
   watch: {
-    bugLocations() {
+    bugReportTokens() {
       this.drawBipartiteGraph();
+    },
+    numEdge() {
+      this.validateNumbersAndDrawBipartiteGraph();
+    },
+    numFile() {
+      this.validateNumbersAndDrawBipartiteGraph();
     },
   },
   methods: {
+    validateNumbersAndDrawBipartiteGraph() {
+      if (this.numFile < 1) {
+        this.numFile = 1;
+      }
+      if (this.numEdge <= 1) {
+        this.numEdge = 1;
+      }
+      if (this.numEdge > this.numFile * this.bugReportTokens.length) {
+        // this is the maximum possible number of edges
+        this.numEdge = this.numFile * this.bugReportTokens.length;
+      }
+      this.drawBipartiteGraph();
+    },
     /**
      * @see: https://www.d3-graph-gallery.com/
      */
@@ -41,11 +91,13 @@ export default defineComponent({
       const svg = d3.select(svgEl);
       svg.selectChildren().remove();
 
-      const rows = Object.entries(this.bugWordToFileSimilarities).flatMap(
-        ([filename, similarities]) => {
-          if (!this.bugLocations.includes(filename)) {
-            return [];
-          }
+      const bugLocations = Object.entries(this.bugWordToFileSimilarities).slice(
+        0,
+        this.numFile
+      );
+
+      const rows = bugLocations
+        .flatMap(([filename, similarities]) => {
           return similarities.map((similarity, i) => {
             return {
               bugReportToken: this.bugReportTokens[i],
@@ -53,8 +105,9 @@ export default defineComponent({
               similarity,
             };
           });
-        }
-      );
+        })
+        .sort((a, b) => b.similarity - a.similarity)
+        .slice(0, this.numEdge);
 
       type Datum = typeof rows[number];
 
@@ -67,7 +120,7 @@ export default defineComponent({
         .domain(groups)
         .range([maxBugReportTokenLength * 8, size - 300]);
 
-      const tokens = [this.bugReportTokens, this.bugLocations];
+      const tokens = [this.bugReportTokens, rows.map((row) => row.filename)];
       const yScales = tokens.map((t) =>
         d3
           .scalePoint()
