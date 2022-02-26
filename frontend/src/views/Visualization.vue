@@ -5,9 +5,9 @@
         :key="tab"
         v-for="tab in tabs"
         class="breadcrumb-item"
-        :class="{ active: tab === activeTab }"
+        :class="{ active: tab !== activeTab }"
       >
-        <a href="#" v-if="tab === activeTab">{{ tab }}</a>
+        <a href="#" v-if="tab !== activeTab">{{ tab }}</a>
         <template v-else> {{ tab }}</template>
       </li>
     </ol>
