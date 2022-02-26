@@ -12,6 +12,7 @@
 <style lang="scss">
 $body-bg: #212529 !default;
 $body-color: #fff !default;
+$enable-negative-margins: true;
 @import "~bootstrap/scss/bootstrap";
 
 #nav {
