@@ -60,7 +60,7 @@ export default defineComponent({
 
   props: {
     fileColor: {
-      type: Object as PropType<Record<string, [string, string]>>,
+      type: Object as PropType<Record<string, string>>,
       required: true,
     },
   },
@@ -210,7 +210,7 @@ export default defineComponent({
         return "transparent";
       }
 
-      return fileColor[0];
+      return fileColor;
     },
 
     getFileForeground(filename: string) {

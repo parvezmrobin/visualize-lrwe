@@ -24,10 +24,10 @@
         <tr
           v-for="bugLocation in bugLocations"
           :key="bugLocation[0]"
-          :style="{ backgroundColor: fileColor[bugLocation[0]][0] }"
+          :style="{ backgroundColor: fileColor[bugLocation[0]] }"
         >
           <td>
-            <code :style="{ color: fileColor[bugLocation[0]][1] }">
+            <code :style="{ color: 'white' }">
               {{ bugLocation[0] }}
             </code>
           </td>
@@ -72,7 +72,7 @@ export default defineComponent({
   name: "LeftPanel",
   props: {
     fileColor: {
-      type: Object as PropType<Record<string, [string, string]>>,
+      type: Object as PropType<Record<string, string>>,
       required: true,
     },
   },

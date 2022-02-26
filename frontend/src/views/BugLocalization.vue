@@ -29,21 +29,15 @@ export default defineComponent({
       );
       return scaleLinear<string>()
         .domain([Math.min(...similarities), Math.max(...similarities)])
-        .range(["#0c1e20", "darkred"]);
+        .range(["#0c1e2033", "darkred"]);
     },
-    fileColor(): Record<string, [string, string]> {
-      const fileColor: Record<string, [string, string]> = {};
+    fileColor(): Record<string, string> {
+      const fileColor: Record<string, string> = {};
       for (const [filename] of this.bugLocations) {
         const similarity = this.bugLocations.find(
           (location: string) => location[0] === filename
         )[1];
-        const background = this.colorScale(similarity);
-        const values = background
-          .match(/rgb\((\d+), (\d+), (\d+)\)/)
-          ?.slice(1)
-          .map((v) => 255 - Number.parseInt(v));
-        const foreground = `rgb(${values?.join(", ")})`;
-        fileColor[filename] = [background, foreground];
+        fileColor[filename] = this.colorScale(similarity);
       }
 
       return fileColor;
