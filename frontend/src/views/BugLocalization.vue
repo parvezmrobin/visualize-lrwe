@@ -29,7 +29,7 @@ export default defineComponent({
       );
       return scaleLinear<string>()
         .domain([Math.min(...similarities), Math.max(...similarities)])
-        .range(["lightyellow", "coral"]);
+        .range(["#0c1e20", "darkred"]);
     },
     fileColor(): Record<string, [string, string]> {
       const fileColor: Record<string, [string, string]> = {};
