@@ -98,17 +98,20 @@ def checkout_to(commit, cwd):
 
 
 def get_java_files_from(
-  repo: str, no_prefix=False,
+    repo: str, no_prefix=False, ignore_test_files=False,
 ) -> Generator[Tuple[str, str], None, None]:
   for root, dirs, files in os.walk(repo):
     for file in files:
-      if file.endswith('.java'):
-        with open(os.path.join(root, file)) as java_file:
-          filepath = os.path.join(root, file)
-          if no_prefix:
-            yield filepath[len(repo) + 1:], java_file.read()
-          else:
-            yield filepath, java_file.read()
+      if not file.endswith('.java'):
+        continue
+      if ignore_test_files and 'test' in file.lower():
+        continue
+      with open(os.path.join(root, file)) as java_file:
+        filepath = os.path.join(root, file)
+        if no_prefix:
+          yield filepath[len(repo) + 1:], java_file.read()
+        else:
+          yield filepath, java_file.read()
 
 
 def get_word_tokens(t: str):

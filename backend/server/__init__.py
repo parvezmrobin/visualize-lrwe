@@ -36,7 +36,9 @@ print('Initiated PCA.')
 
 file_embeddings: FileEmbeddings
 file_tokens_of: Dict[str, List[str]]
-file_map = get_java_files_from(TOMCAT_REPO_DIR, no_prefix=True)
+file_map = get_java_files_from(
+  TOMCAT_REPO_DIR, no_prefix=True, ignore_test_files=True,
+)
 file_embeddings, file_tokens_of = get_embeddings(
   file_map, embedding_index, return_tokens=True,
 )
