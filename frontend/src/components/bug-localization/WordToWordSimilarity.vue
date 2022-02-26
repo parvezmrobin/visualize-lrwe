@@ -18,9 +18,8 @@
   </div>
 
   <!--  Using relative position to position maximize icon properly-->
-  <div style="position: relative">
+  <div v-show="selectedFile" style="position: relative">
     <svg
-      v-show="selectedFile"
       class="border border-info rounded"
       ref="svg"
       @fullscreenchange="onFullScreenChange"
@@ -116,7 +115,7 @@ export default defineComponent({
           svg.clientWidth - 42
         }px`;
       } else {
-        const size = Math.min(svg.clientWidth, window.innerHeight - 160);
+        const size = Math.min(svg.clientWidth, window.innerHeight - 130);
         svg.style.height = `${size}px`;
         svg.style.width = `${size}px`;
         (this.$refs.btnMax as HTMLButtonElement).style.left = `${size - 42}px`;
