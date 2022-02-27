@@ -13,7 +13,7 @@
 
 <script lang="ts">
 import LeftPanel from "@/components/bug-localization/LeftPanel.vue";
-import Visualization from "@/views/Visualization.vue";
+import Visualization from "@/components/bug-localization/Visualization.vue";
 import { scaleLinear, ScaleLinear } from "d3";
 import { defineComponent } from "vue";
 import { mapState } from "vuex";

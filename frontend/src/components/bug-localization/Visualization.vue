@@ -22,7 +22,7 @@
 </template>
 <script lang="ts">
 import WordToWordSimilarity from "@/components/bug-localization/WordToWordSimilarity.vue";
-import WordToFileSimilarity from "@/views/WordToFileSimilarity.vue";
+import WordToFileSimilarity from "@/components/bug-localization/WordToFileSimilarity.vue";
 import { defineComponent, PropType } from "vue";
 
 export default defineComponent({
