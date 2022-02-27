@@ -72,7 +72,7 @@
 </template>
 
 <script lang="ts">
-import { computeSvgSize } from "@/components/bug-localization/utils";
+import { computeSvgSize } from "@/utils";
 import { TSNEPayload } from "@/store";
 import { createPopper } from "@popperjs/core";
 import axios from "axios";

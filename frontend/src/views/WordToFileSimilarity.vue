@@ -40,8 +40,8 @@
 </template>
 
 <script lang="ts">
-import { computeSvgSize } from "@/components/bug-localization/utils";
 import { State } from "@/store";
+import { computeSvgSize, formatFileTick } from "@/utils";
 import * as d3 from "d3";
 import { defineComponent } from "vue";
 import { mapState } from "vuex";
@@ -224,23 +224,19 @@ export default defineComponent({
         // @see: https://bl.ocks.org/guilhermesimoes/15ed216d14175d8165e6
         axes.each(function (group, i) {
           const axisPlacement = i % 2 ? "axisRight" : "axisLeft";
-          d3.select(this).transition().call(d3[axisPlacement](yScales[i]));
+          d3.select(this)
+            .transition()
+            .call(d3[axisPlacement](yScales[i]))
+            .selectAll<SVGTextElement, string>("line+text")
+            .style("font-size", "12px")
+            .text(formatFileTick);
         });
       }
 
       axes
-        .selectAll<SVGTextElement, string>("text")
+        .selectAll<SVGTextElement, string>("line+text")
         .style("font-size", "12px")
-        .text((t: string) => {
-          t = t.replaceAll("\\", "/");
-          if (t.length < 50) {
-            return t;
-          }
-          const parts = t.split("/");
-          return (
-            parts.slice(0, 3).join("/") + "/.../" + parts[parts.length - 1]
-          );
-        })
+        .text(formatFileTick)
         .on("mouseover", (e, d) => {
           tooltip
             .html(`<code class="text-info">${d}</code>`)

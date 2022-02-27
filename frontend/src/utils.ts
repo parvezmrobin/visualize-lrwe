@@ -10,3 +10,12 @@ export function computeSvgSize(svg: SVGElement): number {
     );
   }
 }
+
+export const formatFileTick = (t: string): string => {
+  t = t.replaceAll("\\", "/");
+  if (t.length < 50) {
+    return t;
+  }
+  const parts = t.split("/");
+  return parts.slice(0, 3).join("/") + "/.../" + parts[parts.length - 1];
+};
