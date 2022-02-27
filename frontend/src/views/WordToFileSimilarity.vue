@@ -222,15 +222,17 @@ export default defineComponent({
           .style("font-size", "16px");
       } else {
         // @see: https://bl.ocks.org/guilhermesimoes/15ed216d14175d8165e6
-        axes.each(function (group, i) {
-          const axisPlacement = i % 2 ? "axisRight" : "axisLeft";
-          d3.select(this)
-            .transition()
-            .call(d3[axisPlacement](yScales[i]))
-            .selectAll<SVGTextElement, string>("line+text")
-            .style("font-size", "12px")
-            .text(formatFileTick);
-        });
+        axes
+          .attr("transform", (d) => `translate(${xScale(d)})`)
+          .each(function (group, i) {
+            const axisPlacement = i % 2 ? "axisRight" : "axisLeft";
+            d3.select(this)
+              .transition()
+              .call(d3[axisPlacement](yScales[i]))
+              .selectAll<SVGTextElement, string>("line+text")
+              .style("font-size", "12px")
+              .text(formatFileTick);
+          });
       }
 
       axes
