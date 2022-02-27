@@ -1,6 +1,6 @@
 <template>
   <div class="mb-3 row">
-    <label for="num-file" class="col-sm-4 col-form-label">
+    <label for="num-file" class="col-auto col-form-label">
       Number of Files to Show
     </label>
     <div class="col-sm-2">
@@ -13,7 +13,7 @@
       />
     </div>
 
-    <label for="num-edge" class="col-sm-4 col-form-label">
+    <label for="num-edge" class="col-auto col-form-label">
       Number of Edges to Show
     </label>
     <div class="col-sm-2">
@@ -27,14 +27,21 @@
     </div>
   </div>
 
-  <div class="position-relative">
+  <div class="position-relative" v-once>
     <svg ref="svg" class="border border-info rounded"></svg>
   </div>
+
+  <div
+    v-once
+    ref="tooltip"
+    class="px-2 py-1 rounded shadow position-fixed"
+    style="visibility: hidden; z-index: 1"
+  />
 </template>
 
 <script lang="ts">
 import { computeSvgSize } from "@/components/bug-localization/utils";
-import { SimilarityPayload, State } from "@/store";
+import { State } from "@/store";
 import * as d3 from "d3";
 import { defineComponent } from "vue";
 import { mapState } from "vuex";
@@ -50,10 +57,8 @@ export default defineComponent({
   computed: {
     ...mapState({
       bugWordToFileSimilarities: (state) =>
-        ((state as State).similarity as SimilarityPayload)
-          .bugWordToFileSimilarities,
-      bugReportTokens: (state) =>
-        ((state as State).similarity as SimilarityPayload).bugReportTokens,
+        (state as State).similarity?.bugWordToFileSimilarities,
+      bugReportTokens: (state) => (state as State).similarity?.bugReportTokens,
     }),
   },
   watch: {
@@ -69,6 +74,9 @@ export default defineComponent({
   },
   methods: {
     validateNumbersAndDrawBipartiteGraph() {
+      if (!this.bugReportTokens) {
+        return;
+      }
       if (this.numFile < 1) {
         this.numFile = 1;
       }
@@ -85,6 +93,9 @@ export default defineComponent({
      * @see: https://www.d3-graph-gallery.com/
      */
     drawBipartiteGraph() {
+      if (!this.bugWordToFileSimilarities || !this.bugReportTokens) {
+        return;
+      }
       const svgEl = this.$refs.svg as SVGElement;
       const size = computeSvgSize(svgEl);
       svgEl.style.height = `${size}px`;
@@ -98,11 +109,12 @@ export default defineComponent({
         this.numFile
       );
 
+      const bugReportTokens = this.bugReportTokens;
       const rows = bugLocations
         .flatMap(([filename, similarities]) => {
           return similarities.map((similarity, i) => {
             return {
-              bugReportToken: this.bugReportTokens[i],
+              bugReportToken: bugReportTokens[i],
               filename,
               similarity,
             };
@@ -115,26 +127,26 @@ export default defineComponent({
 
       const groups = ["Bug Report Word", "File"] as const;
       const maxBugReportTokenLength = Math.max(
-        ...this.bugReportTokens.map((t) => t.length)
+        ...bugReportTokens.map((t) => t.length)
       );
       const xScale = d3
         .scalePoint()
         .domain(groups)
         .range([maxBugReportTokenLength * 8, size - 300]);
 
-      const tokens = [this.bugReportTokens, rows.map((row) => row.filename)];
-      const yScales = tokens.map((t) =>
-        d3
-          .scalePoint()
-          .domain(t.reverse())
-          .range([size - 15, 35])
+      const yScales = [bugReportTokens, rows.map((row) => row.filename)].map(
+        (tokens) =>
+          d3
+            .scalePoint()
+            .domain(tokens.sort())
+            .range([size - 15, 35])
       );
 
       const similarities = rows.map((row) => row.similarity);
       const edgeColorScale = d3
         .scaleLinear<string>()
         .domain([Math.min(...similarities), Math.max(...similarities)])
-        .range(["seagreen", "darkred"]);
+        .range(["lightseagreen", "#aa1123"]);
 
       type NullableNumber = number | undefined;
       const path = (d: Datum) => {
@@ -144,14 +156,17 @@ export default defineComponent({
         ]);
       };
 
-      const similarityTooltip = d3
-        .select("body")
-        .append("div")
-        .attr("class", "px-2 py-1 rounded")
-        .style("position", "absolute")
-        .style("z-index", "1")
-        .style("visibility", "hidden");
+      const tooltip = d3.select(this.$refs.tooltip as HTMLDivElement);
+      console.log(tooltip);
 
+      const hideTooltip = () => {
+        tooltip.style("visibility", "hidden");
+      };
+      const moveTooltip = (e: MouseEvent) => {
+        tooltip
+          .style("bottom", `calc(100vh - ${e.y - 5}px)`)
+          .style("right", `calc(100vw - ${e.x}px)`);
+      };
       svg
         .selectAll(".edge")
         .data<Datum>(rows)
@@ -162,19 +177,19 @@ export default defineComponent({
         .style("stroke", (d) => edgeColorScale(d.similarity))
         .style("stroke-width", "2px")
         .on("mouseover", (e, d) => {
-          similarityTooltip
-            .text(d.similarity.toFixed(3))
+          tooltip
+            .html(
+              `Similarity of ‘${
+                d.bugReportToken
+              }’ and <code class="text-white">${
+                d.filename.split(/[\\/]/).slice(-1)[0]
+              }</code> is ${d.similarity.toFixed(3)}`
+            )
             .style("visibility", "visible")
             .style("background-color", edgeColorScale(d.similarity));
         })
-        .on("mousemove", (e: MouseEvent) => {
-          similarityTooltip
-            .style("top", `${e.y - 10}px`)
-            .style("left", `${e.x + 10}px`);
-        })
-        .on("mouseout", () => {
-          similarityTooltip.style("visibility", "hidden");
-        });
+        .on("mousemove", moveTooltip)
+        .on("mouseout", hideTooltip);
 
       const axes = svg
         .selectAll(".axis")
@@ -199,7 +214,15 @@ export default defineComponent({
           return (
             parts.slice(0, 3).join("/") + "/.../" + parts[parts.length - 1]
           );
-        });
+        })
+        .on("mouseover", (e, d) => {
+          tooltip
+            .html(`<code class="text-info">${d}</code>`)
+            .style("visibility", "visible")
+            .style("background-color", "var(--bs-dark)");
+        })
+        .on("mousemove", moveTooltip)
+        .on("mouseout", hideTooltip);
 
       // Add axis title
       axes
