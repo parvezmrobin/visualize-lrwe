@@ -46,6 +46,9 @@ import * as d3 from "d3";
 import { defineComponent } from "vue";
 import { mapState } from "vuex";
 
+let axes: d3.Selection<SVGGElement, string, SVGElement, unknown>;
+type Datum = { filename: string; similarity: number; bugReportToken: string };
+
 export default defineComponent({
   name: "WordToFileSimilarity",
   data() {
@@ -60,6 +63,14 @@ export default defineComponent({
         (state as State).similarity?.bugWordToFileSimilarities,
       bugReportTokens: (state) => (state as State).similarity?.bugReportTokens,
     }),
+    /**
+     * Implementing as a computed property to avoid repeated d3.Selection creation
+     * @returns {Selection<SVGElement, unknown, null, undefined>}
+     */
+    d3Svg() {
+      const svgEl = this.$refs.svg as SVGElement;
+      return d3.select(svgEl);
+    },
   },
   watch: {
     bugReportTokens() {
@@ -96,13 +107,8 @@ export default defineComponent({
       if (!this.bugWordToFileSimilarities || !this.bugReportTokens) {
         return;
       }
-      const svgEl = this.$refs.svg as SVGElement;
-      const size = computeSvgSize(svgEl);
-      svgEl.style.height = `${size}px`;
-      svgEl.style.width = `${size}px`;
-
-      const svg = d3.select(svgEl);
-      svg.selectChildren().remove();
+      const size = computeSvgSize(this.d3Svg.node() as SVGElement);
+      this.d3Svg.style("height", `${size}px`).style("width", `${size}px`);
 
       const bugLocations = Object.entries(this.bugWordToFileSimilarities).slice(
         0,
@@ -122,8 +128,6 @@ export default defineComponent({
         })
         .sort((a, b) => b.similarity - a.similarity)
         .slice(0, this.numEdge);
-
-      type Datum = typeof rows[number];
 
       const groups = ["Bug Report Word", "File"] as const;
       const maxBugReportTokenLength = Math.max(
@@ -157,7 +161,6 @@ export default defineComponent({
       };
 
       const tooltip = d3.select(this.$refs.tooltip as HTMLDivElement);
-      console.log(tooltip);
 
       const hideTooltip = () => {
         tooltip.style("visibility", "hidden");
@@ -167,15 +170,13 @@ export default defineComponent({
           .style("bottom", `calc(100vh - ${e.y - 5}px)`)
           .style("right", `calc(100vw - ${e.x}px)`);
       };
-      svg
-        .selectAll(".edge")
-        .data<Datum>(rows)
+
+      const edges = this.d3Svg.selectAll("path.edge").data(rows);
+      edges.exit().remove();
+      edges
         .enter()
         .append("path")
-        .attr("d", path)
-        .style("fill", "none")
-        .style("stroke", (d) => edgeColorScale(d.similarity))
-        .style("stroke-width", "2px")
+        .attr("class", "edge")
         .on("mouseover", (e, d) => {
           tooltip
             .html(
@@ -191,16 +192,41 @@ export default defineComponent({
         .on("mousemove", moveTooltip)
         .on("mouseout", hideTooltip);
 
-      const axes = svg
-        .selectAll(".axis")
-        .data(groups)
-        .enter()
-        .append("g")
-        .attr("transform", (d) => "translate(" + xScale(d) + ")")
-        .each(function (group, i) {
+      this.d3Svg
+        .selectAll<SVGPathElement, Datum>("path.edge")
+        .transition()
+        .attr("d", path)
+        .style("fill", "none")
+        .style("stroke", (d) => edgeColorScale(d.similarity))
+        .style("stroke-width", "2px");
+
+      if (!axes) {
+        axes = this.d3Svg
+          .selectAll(".axis")
+          .data<string>(groups)
+          .enter()
+          .append("g")
+          .attr("transform", (d) => `translate(${xScale(d)})`)
+          .each(function (group, i) {
+            const axisPlacement = i % 2 ? "axisRight" : "axisLeft";
+            return d3.select(this).call(d3[axisPlacement](yScales[i]));
+          });
+
+        // Add axis title
+        axes
+          .append("text")
+          .style("text-anchor", "middle")
+          .attr("y", 16)
+          .text((group) => group)
+          .style("fill", "var(--bs-info)")
+          .style("font-size", "16px");
+      } else {
+        // @see: https://bl.ocks.org/guilhermesimoes/15ed216d14175d8165e6
+        axes.each(function (group, i) {
           const axisPlacement = i % 2 ? "axisRight" : "axisLeft";
-          d3.select(this).call(d3[axisPlacement](yScales[i]));
+          d3.select(this).transition().call(d3[axisPlacement](yScales[i]));
         });
+      }
 
       axes
         .selectAll<SVGTextElement, string>("text")
@@ -223,15 +249,6 @@ export default defineComponent({
         })
         .on("mousemove", moveTooltip)
         .on("mouseout", hideTooltip);
-
-      // Add axis title
-      axes
-        .append("text")
-        .style("text-anchor", "middle")
-        .attr("y", 16)
-        .text((group) => group)
-        .style("fill", "var(--bs-info)")
-        .style("font-size", "16px");
     },
   },
   mounted(): void {
