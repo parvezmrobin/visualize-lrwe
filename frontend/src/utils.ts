@@ -1,3 +1,5 @@
+import type { BaseType, Selection } from "d3";
+
 export function computeSvgSize(svg: SVGElement): number {
   if (document.fullscreenElement) {
     return svg.clientWidth;
@@ -19,3 +21,10 @@ export const formatFileTick = (t: string): string => {
   const parts = t.split("/");
   return parts.slice(0, 3).join("/") + "/.../" + parts[parts.length - 1];
 };
+
+export type D3Selection<T extends BaseType> = Selection<
+  T,
+  unknown,
+  BaseType,
+  never
+>;

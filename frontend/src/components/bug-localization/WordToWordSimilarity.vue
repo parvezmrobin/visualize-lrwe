@@ -49,7 +49,7 @@
 </template>
 
 <script lang="ts">
-import { computeSvgSize } from "@/utils";
+import { computeSvgSize, D3Selection } from "@/utils";
 import { TSNEPayload } from "@/store";
 import { createPopper } from "@popperjs/core";
 import axios from "axios";
@@ -58,6 +58,7 @@ import { defineComponent, PropType } from "vue";
 import { mapState } from "vuex";
 
 type ShowPopper = (e: MouseEvent, point: [number, number]) => void;
+const DOT_RADIUS = 3;
 
 export default defineComponent({
   name: "WordToWordSimilarity",
@@ -121,14 +122,17 @@ export default defineComponent({
       if (!this.similarity || !this.selectedFile) {
         return;
       }
-      const DOT_RADIUS = 3;
+      const margin = {
+        left: 50,
+        bottom: 50,
+      };
 
       const svg = this.$refs.svg as SVGElement;
       const size = computeSvgSize(svg);
       svg.style.height = `${size}px`;
       svg.style.width = `${size}px`;
 
-      d3.select(svg).selectAll("g").remove();
+      const d3Svg = d3.select(svg);
 
       let fileEmbedding: [number, number][];
       let bugReportEmbedding: [number, number][];
@@ -149,58 +153,80 @@ export default defineComponent({
       const xScale = d3
         .scaleLinear()
         .domain([Math.min(...xValues), Math.max(...xValues)])
-        .range([DOT_RADIUS, svg.clientWidth - DOT_RADIUS]);
+        .range([DOT_RADIUS + margin.left, svg.clientWidth - DOT_RADIUS]);
 
       const yScale = d3
         .scaleLinear()
         .domain([Math.min(...yValues), Math.max(...yValues)])
-        .range([svg.clientWidth - DOT_RADIUS, DOT_RADIUS]);
+        .range([svg.clientWidth - DOT_RADIUS - margin.bottom, DOT_RADIUS]);
 
-      d3.select(svg)
-        .append("g")
-        .selectAll(".file.dot")
-        .data<[number, number]>(fileEmbedding)
-        .enter()
-        .append("circle")
-        .attr("cx", (d) => xScale((d as number[])[0]))
-        .attr("cy", (d) => yScale((d as number[])[1]))
-        .attr("r", DOT_RADIUS)
-        .style("fill", "magenta")
+      const embeddings = {
+        bugReportEmbedding: [
+          bugReportEmbedding,
+          this.similarity.bugReportTokens,
+          "cyan",
+        ] as const,
+        fileEmbedding: [
+          fileEmbedding,
+          this.similarity.fileTokens[this.selectedFile],
+          "magenta",
+        ] as const,
+      };
+
+      for (const key in embeddings) {
+        const [embedding, tokens, color] =
+          embeddings[key as keyof typeof embeddings];
+        this.ensureEmbeddingPlate(
+          d3Svg,
+          key,
+          embedding,
+          tokens,
+          xScale,
+          yScale,
+          color
+        );
+      }
+    },
+
+    ensureEmbeddingPlate(
+      svg: D3Selection<SVGElement>,
+      key: string,
+      embedding: [number, number][],
+      tokens: string[],
+      xScale: d3.ScaleLinear<number, number>,
+      yScale: d3.ScaleLinear<number, number>,
+      color: string
+    ) {
+      let group: D3Selection<SVGGElement> = svg.select(`g.plate.${key}`);
+      if (group.empty()) {
+        group = svg.append("g").attr("class", `plate ${key}`);
+      }
+      const pointsWithData = svg
+        .selectAll(`.${key}.dot`)
+        .data<[number, number]>(embedding);
+      pointsWithData.exit().remove();
+      pointsWithData.enter().append("circle").attr("class", `${key} dot`);
+
+      // now take all points (existing + appended) and set/update position
+      svg
+        .selectAll<SVGCircleElement, [number, number]>(`circle.${key}.dot`)
         .on(
           "mouseenter",
           this.createShowPopperFunction(
-            fileEmbedding,
+            embedding,
             this.$refs.popperFile as HTMLDivElement,
-            this.similarity.fileTokens[this.selectedFile]
+            tokens
           )
         )
         .on("mouseout", () => {
           const popper = this.$refs.popperFile as HTMLDivElement;
           popper.hidden = true;
-        });
-
-      d3.select(svg)
-        .append("g")
-        .selectAll(".br.dot")
-        .data<[number, number]>(bugReportEmbedding)
-        .enter()
-        .append("circle")
+        })
+        .transition()
         .attr("cx", (d) => xScale(d[0]))
         .attr("cy", (d) => yScale(d[1]))
         .attr("r", DOT_RADIUS)
-        .style("fill", "teal")
-        .on(
-          "mouseenter",
-          this.createShowPopperFunction(
-            bugReportEmbedding,
-            this.$refs.popperBugReport as HTMLDivElement,
-            this.similarity.bugReportTokens
-          )
-        )
-        .on("mouseout", () => {
-          const popper = this.$refs.popperBugReport as HTMLDivElement;
-          popper.hidden = true;
-        });
+        .style("fill", color);
     },
 
     createShowPopperFunction(
@@ -211,6 +237,7 @@ export default defineComponent({
       console.assert(embedding.length === words.length);
       return (e: MouseEvent, point) => {
         const index = embedding.indexOf(point);
+        console.log("index", index);
         const word = words[index];
 
         popper.hidden = false;
