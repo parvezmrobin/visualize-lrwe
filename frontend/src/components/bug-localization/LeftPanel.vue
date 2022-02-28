@@ -98,11 +98,13 @@ export default defineComponent({
   },
 
   async mounted() {
+    this.$store.state.isLoading = true;
     const resp = await axios.get<BugSummaryResponse>(`/bug`);
     this.bugs = Object.entries(resp.data.bug_id).map(([i, bug_id]) => ({
       bug_id,
       summary: resp.data.summary[i],
     }));
+    this.$store.state.isLoading = false;
   },
 });
 </script>
