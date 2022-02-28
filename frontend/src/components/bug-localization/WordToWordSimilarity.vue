@@ -57,6 +57,8 @@ import * as d3 from "d3";
 import { defineComponent, PropType } from "vue";
 import { mapState } from "vuex";
 
+type ShowPopper = (e: MouseEvent, point: [number, number]) => void;
+
 export default defineComponent({
   name: "WordToWordSimilarity",
 
@@ -137,44 +139,22 @@ export default defineComponent({
         fileEmbedding = this.tSNE.fileEmbeddingsTSNE[this.selectedFile];
         bugReportEmbedding = this.tSNE.bugReportEmbeddingTSNE;
       }
-      const min = Math.min(
-        ...fileEmbedding.flat(),
-        ...bugReportEmbedding.flat()
+      const xValues = [fileEmbedding, bugReportEmbedding].flatMap((embedding) =>
+        embedding.map(([x]) => x)
       );
-      const max = Math.max(
-        ...fileEmbedding.flat(),
-        ...bugReportEmbedding.flat()
+      const yValues = [fileEmbedding, bugReportEmbedding].flatMap((embedding) =>
+        embedding.map(([, y]) => y)
       );
+
       const xScale = d3
         .scaleLinear()
-        .domain([min, max])
+        .domain([Math.min(...xValues), Math.max(...xValues)])
         .range([DOT_RADIUS, svg.clientWidth - DOT_RADIUS]);
 
       const yScale = d3
         .scaleLinear()
-        .domain([min, max])
+        .domain([Math.min(...yValues), Math.max(...yValues)])
         .range([svg.clientWidth - DOT_RADIUS, DOT_RADIUS]);
-
-      type ShowPopper = (e: MouseEvent, point: [number, number]) => void;
-
-      const createShowPopperFunction = (
-        embedding: [number, number][],
-        popper: HTMLDivElement,
-        words: string[]
-      ): ShowPopper => {
-        console.assert(embedding.length === words.length);
-        return (e: MouseEvent, point) => {
-          const index = embedding.indexOf(point);
-          const word = words[index];
-
-          popper.hidden = false;
-          popper.innerText = word;
-
-          createPopper(e.target as HTMLElement, popper, {
-            placement: "right",
-          });
-        };
-      };
 
       d3.select(svg)
         .append("g")
@@ -188,7 +168,7 @@ export default defineComponent({
         .style("fill", "magenta")
         .on(
           "mouseenter",
-          createShowPopperFunction(
+          this.createShowPopperFunction(
             fileEmbedding,
             this.$refs.popperFile as HTMLDivElement,
             this.similarity.fileTokens[this.selectedFile]
@@ -211,7 +191,7 @@ export default defineComponent({
         .style("fill", "teal")
         .on(
           "mouseenter",
-          createShowPopperFunction(
+          this.createShowPopperFunction(
             bugReportEmbedding,
             this.$refs.popperBugReport as HTMLDivElement,
             this.similarity.bugReportTokens
@@ -221,6 +201,25 @@ export default defineComponent({
           const popper = this.$refs.popperBugReport as HTMLDivElement;
           popper.hidden = true;
         });
+    },
+
+    createShowPopperFunction(
+      embedding: [number, number][],
+      popper: HTMLDivElement,
+      words: string[]
+    ): ShowPopper {
+      console.assert(embedding.length === words.length);
+      return (e: MouseEvent, point) => {
+        const index = embedding.indexOf(point);
+        const word = words[index];
+
+        popper.hidden = false;
+        popper.innerText = word;
+
+        createPopper(e.target as HTMLElement, popper, {
+          placement: "right",
+        });
+      };
     },
 
     getFileBackground(filename: string) {
