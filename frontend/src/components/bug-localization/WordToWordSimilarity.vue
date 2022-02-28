@@ -42,7 +42,14 @@
 
   <!--  Using relative position to position maximize icon properly-->
   <div v-show="selectedFile" style="position: relative">
-    <svg class="border border-info rounded" ref="svg" />
+    <svg class="border border-info rounded" ref="svg">
+      <g id="legend">
+        <rect x="10" y="10" width="5" height="5" fill="cyan" />
+        <text x="20" y="18" fill="cyan">Bug Report</text>
+        <rect x="10" y="30" width="5" height="5" fill="magenta" />
+        <text x="20" y="38" fill="magenta">Selected File</text>
+      </g>
+    </svg>
     <div ref="popperBugReport" class="popper br" hidden></div>
     <div ref="popperFile" class="popper file" hidden></div>
   </div>
