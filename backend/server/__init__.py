@@ -1,7 +1,7 @@
 import gc
 import json
 import os
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -13,7 +13,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 from server.utils import get_embedding_index, checkout_to, \
   get_java_files_from, get_embeddings, get_embedding_of_file, FileEmbeddings, \
-  chop_dict, first_value_of, first_key_of
+  chop_dict, first_value_of, first_key_of, EMBEDDING_DIMENSION
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 assert os.getcwd().endswith('backend')
@@ -33,7 +33,9 @@ print('Loaded embedding.')
 
 pca = PCA(n_components=2)
 pca.fit(np.stack(list(embedding_index.values()), axis=0))
-t_sne = TSNE(n_components=2, learning_rate='auto', init='random')
+t_sne = TSNE(
+  n_components=2, learning_rate='auto', init='random', random_state=420,
+)
 print('Initiated PCA & tSNE.')
 
 file_embeddings: FileEmbeddings
@@ -66,13 +68,31 @@ def get_tsne_dimensions(bug_id):
   filenames = request.json['filenames']
   top_word_indices = request.json['topWordIndices']
 
-  bug_report_embedding_2d = t_sne.fit_transform(bug_report_embedding)
-  file_embedding_2d = {
-    filename: t_sne.fit_transform(
-      file_embeddings[filename][top_word_indices[filename]],
+  segments: List[np.ndarray] = [bug_report_embedding]
+  segment_indices: Dict[str, Tuple[int, int]] = {}
+
+  curr_ending_idx = len(bug_report_embedding)
+  for filename in filenames:
+    top_word_index = top_word_indices[filename]
+    file_embedding = file_embeddings[filename][top_word_index]
+    segments.append(file_embedding)
+    segment_indices[filename] = (
+      curr_ending_idx,
+      curr_ending_idx + len(file_embedding),
     )
-    for filename in filenames
-  }
+    curr_ending_idx += len(file_embedding)
+
+  all_embedding = np.concatenate(segments)
+  assert len(all_embedding.shape) == 2
+  assert all_embedding.shape == (curr_ending_idx, EMBEDDING_DIMENSION)
+
+  # first, use PCA to reduce dimension.
+  # then, use t-SNE for better visualization.
+  all_embedding_2d = t_sne.fit_transform(pca.transform(all_embedding))
+  bug_report_embedding_2d = all_embedding_2d[: len(bug_report_embedding)]
+  file_embedding_2d: Dict[str, np.ndarray] = {}
+  for filename, (frm, to) in segment_indices.items():
+    file_embedding_2d[filename] = all_embedding_2d[frm: to]
 
   response = json.dumps({
     'fileEmbeddingsTSNE': file_embedding_2d,
