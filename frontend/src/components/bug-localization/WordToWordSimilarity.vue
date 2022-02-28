@@ -244,6 +244,7 @@ export default defineComponent({
       console.assert(embedding.length === words.length);
       return (e: MouseEvent, point) => {
         const index = embedding.indexOf(point);
+        console.log("index", index);
         const word = words[index];
 
         popper.hidden = false;
