@@ -19,18 +19,27 @@
     :fileColor="fileColor"
   />
   <WordToFileSimilarity v-else-if="activeTab === 'Word To File Similarity'" />
+  <WordToBugReportSimilarity
+    v-else-if="activeTab === 'Word To Bug Report Similarity'"
+    :fileColor="fileColor"
+  />
 </template>
 <script lang="ts">
 import WordToWordSimilarity from "@/components/bug-localization/WordToWordSimilarity.vue";
 import WordToFileSimilarity from "@/components/bug-localization/WordToFileSimilarity.vue";
+import WordToBugReportSimilarity from "@/components/bug-localization/WordToBugReportSimilarity.vue";
 import { defineComponent, PropType } from "vue";
 
 export default defineComponent({
   name: "Visualization",
-  components: { WordToFileSimilarity, WordToWordSimilarity },
+  components: {
+    WordToFileSimilarity,
+    WordToWordSimilarity,
+    WordToBugReportSimilarity,
+  },
   props: {
     fileColor: {
-      type: Object as PropType<Record<string, [string, string]>>,
+      type: Object as PropType<Record<string, string>>,
       required: true,
     },
   },
@@ -39,6 +48,7 @@ export default defineComponent({
       tabs: [
         "Word To Word Similarity",
         "Word To File Similarity",
+        "Word To Bug Report Similarity",
         "Bug Report To File Similarity",
       ],
       activeTab: "Word To Word Similarity",
