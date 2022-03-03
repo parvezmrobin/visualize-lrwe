@@ -1,20 +1,6 @@
 <template>
-  <div class="mb-3 row" v-show="files.length">
-    <label for="select-file" class="col-sm-3 col-lg-2 col-form-label"
-      >Select A File</label
-    >
-    <div class="col-sm-6">
-      <select v-model="selectedFile" class="form-control" id="select-file">
-        <option
-          :key="file"
-          v-for="file in files.slice(0, 100)"
-          :value="file"
-          :style="{ backgroundColor: getFileBackground(file) }"
-        >
-          {{ file }}
-        </option>
-      </select>
-    </div>
+  <div class="mb-3 row" v-show="filenames.length">
+    <SelectFile :file-color="fileColor" />
 
     <div class="col-sm-3 col-lg-4 d-flex align-items-center">
       <div class="form-check form-check-inline">
@@ -56,20 +42,21 @@
 </template>
 
 <script lang="ts">
-import { computeSvgSize, D3Selection } from "@/utils";
+import SelectFile from "@/components/bug-localization/SelectFile.vue";
 import { TSNEPayload } from "@/store";
+import { computeSvgSize, D3Selection } from "@/utils";
 import { createPopper } from "@popperjs/core";
 import axios from "axios";
 import * as d3 from "d3";
 import { defineComponent, PropType } from "vue";
-import { mapState } from "vuex";
+import { mapGetters, mapState } from "vuex";
 
 type ShowPopper = (e: MouseEvent, point: [number, number]) => void;
 const DOT_RADIUS = 3;
 
 export default defineComponent({
   name: "WordToWordSimilarity",
-
+  components: { SelectFile },
   props: {
     fileColor: {
       type: Object as PropType<Record<string, string>>,
@@ -84,18 +71,8 @@ export default defineComponent({
   },
 
   computed: {
-    ...mapState(["selectedBug", "similarity", "tSNE"]),
-    selectedFile: {
-      get() {
-        return this.$store.state.selectedFile;
-      },
-      set(value: string) {
-        this.$store.state.selectedFile = value;
-      },
-    },
-    files(): string[] {
-      return Object.keys(this.similarity?.asymmetricSimilarity || {});
-    },
+    ...mapState(["selectedBug", "selectedFile", "similarity", "tSNE"]),
+    ...mapGetters(["filenames"]),
   },
 
   watch: {
@@ -254,24 +231,6 @@ export default defineComponent({
           placement: "right",
         });
       };
-    },
-
-    getFileBackground(filename: string) {
-      const fileColor = this.fileColor[filename];
-      if (!fileColor) {
-        return "transparent";
-      }
-
-      return fileColor;
-    },
-
-    getFileForeground(filename: string) {
-      const fileColor = this.fileColor[filename];
-      if (!fileColor) {
-        return "black";
-      }
-
-      return fileColor[1];
     },
   },
 

@@ -41,6 +41,11 @@ export default createStore<State>({
       tSNE: undefined,
     };
   },
+  getters: {
+    filenames(self): string[] {
+      return Object.keys(self.similarity?.asymmetricSimilarity || {});
+    },
+  },
   mutations: {},
   actions: {
     updateSimilarityData(self, similarityPayload: SimilarityPayload) {
