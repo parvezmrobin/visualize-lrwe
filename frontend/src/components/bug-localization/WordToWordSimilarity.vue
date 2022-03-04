@@ -107,8 +107,10 @@ export default defineComponent({
         return;
       }
       const margin = {
-        left: 50,
-        bottom: 50,
+        left: 5,
+        right: 5,
+        top: 5,
+        bottom: 5,
       };
 
       const svg = this.$refs.svg as SVGElement;
@@ -137,12 +139,18 @@ export default defineComponent({
       const xScale = d3
         .scaleLinear()
         .domain([Math.min(...xValues), Math.max(...xValues)])
-        .range([DOT_RADIUS + margin.left, svg.clientWidth - DOT_RADIUS]);
+        .range([
+          DOT_RADIUS + margin.left,
+          svg.clientWidth - DOT_RADIUS - margin.right,
+        ]);
 
       const yScale = d3
         .scaleLinear()
         .domain([Math.min(...yValues), Math.max(...yValues)])
-        .range([svg.clientWidth - DOT_RADIUS - margin.bottom, DOT_RADIUS]);
+        .range([
+          svg.clientWidth - DOT_RADIUS - margin.bottom,
+          DOT_RADIUS + margin.top,
+        ]);
 
       const embeddings = {
         bugReportEmbedding: [

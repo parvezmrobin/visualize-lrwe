@@ -37,12 +37,12 @@ export default defineComponent({
     fileWordToBugSimilarities() {
       return this.$store.state.similarity?.fileWordToBugSimilarity[
         this.selectedFile
-      ].slice(0, 50);
+      ].slice(0, 30);
     },
     fileWords() {
       return this.$store.state.similarity?.fileTokens[this.selectedFile].slice(
         0,
-        50
+        30
       );
     },
   },
@@ -120,6 +120,8 @@ export default defineComponent({
         .attr("y", (d) => yScale(d.word) as number)
         .attr("width", (d) => xScale(d.similarity))
         .attr("height", yScale.bandwidth)
+        .attr("rx", 5)
+        .attr("ry", 2)
         .style("fill", (d) => barColorScale(d.similarity));
 
       let axis: D3Selection<SVGGElement> = d3Svg.select(".axis");
@@ -132,6 +134,8 @@ export default defineComponent({
       } else {
         axis.transition().call(d3.axisLeft(yScale));
       }
+
+      axis.selectAll("text").style("font-size", "12px");
     },
   },
 });
