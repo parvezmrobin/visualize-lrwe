@@ -180,11 +180,11 @@ export default defineComponent({
         .on("mouseover", (e, d) => {
           tooltip
             .html(
-              `Similarity of ‘${
+              `<span class="text-white">Similarity of ‘${
                 d.bugReportToken
               }’ and <code class="text-white">${
                 d.filename.split(/[\\/]/).slice(-1)[0]
-              }</code> is ${d.similarity.toFixed(3)}`
+              }</code> is ${d.similarity.toFixed(3)}</span>`
             )
             .style("visibility", "visible")
             .style("background-color", edgeColorScale(d.similarity));

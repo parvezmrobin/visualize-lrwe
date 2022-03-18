@@ -130,9 +130,9 @@ export default defineComponent({
           .append("g")
           .attr("class", "axis")
           .attr("transform", `translate(${margin.left}, 0)`)
-          .call(d3.axisLeft(yScale));
+          .call(d3.axisLeft(yScale).tickSizeOuter(0));
       } else {
-        axis.transition().call(d3.axisLeft(yScale));
+        axis.transition().call(d3.axisLeft(yScale).tickSizeOuter(0));
       }
 
       axis.selectAll("text").style("font-size", "12px");
