@@ -22,9 +22,9 @@ export const formatFileTick = (t: string): string => {
   return parts.slice(0, 3).join("/") + "/.../" + parts[parts.length - 1];
 };
 
-export type D3Selection<T extends BaseType> = Selection<
+export type D3Selection<T extends BaseType, Datum = unknown> = Selection<
   T,
-  unknown,
+  Datum,
   BaseType,
   never
 >;

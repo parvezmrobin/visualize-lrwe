@@ -23,8 +23,10 @@
     v-else-if="activeTab === 'Word To Bug Report Similarity'"
     :fileColor="fileColor"
   />
+  <AsymmetricSimilarity v-else-if="activeTab === 'Asymmetric Similarity'" />
 </template>
 <script lang="ts">
+import AsymmetricSimilarity from "@/components/bug-localization/AsymmetricSimilarity.vue";
 import WordToWordSimilarity from "@/components/bug-localization/WordToWordSimilarity.vue";
 import WordToFileSimilarity from "@/components/bug-localization/WordToFileSimilarity.vue";
 import WordToBugReportSimilarity from "@/components/bug-localization/WordToBugReportSimilarity.vue";
@@ -33,6 +35,7 @@ import { defineComponent, PropType } from "vue";
 export default defineComponent({
   name: "Visualization",
   components: {
+    AsymmetricSimilarity,
     WordToFileSimilarity,
     WordToWordSimilarity,
     WordToBugReportSimilarity,
@@ -49,7 +52,7 @@ export default defineComponent({
         "Word To Word Similarity",
         "Word To File Similarity",
         "Word To Bug Report Similarity",
-        "Bug Report To File Similarity",
+        "Asymmetric Similarity",
       ],
       activeTab: "Word To Word Similarity",
     };
@@ -59,6 +62,6 @@ export default defineComponent({
 
 <style scoped lang="scss">
 nav {
-  --bs-breadcrumb-divider: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8'><path d='M2.5 0L1 1.5 3.5 4 1 6.5 2.5 8l4-4-4-4z' fill='white'/></svg>");
+  --bs-breadcrumb-divider: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8'><path d='M2.5 0L1 1.5 3.5 4 1 6.5 2.5 8l4-4-4-4z' fill='var(--bs-body)'/></svg>");
 }
 </style>
