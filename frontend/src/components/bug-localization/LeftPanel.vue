@@ -27,7 +27,7 @@
           :style="{ backgroundColor: fileColor[bugLocation[0]] }"
         >
           <td>
-            <code :style="{ color: 'white' }">
+            <code :style="{ color: 'var(--bs-body)' }">
               {{ bugLocation[0] }}
             </code>
           </td>

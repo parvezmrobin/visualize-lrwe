@@ -32,7 +32,7 @@ export default defineComponent({
       );
       return scaleLinear<string>()
         .domain([Math.min(...similarities), Math.max(...similarities)])
-        .range(["#0c1e2033", "darkred"]);
+        .range(["#0c5ea022", "#e01e1cee"]);
     },
     fileColor(): Record<string, string> {
       const fileColor: Record<string, string> = {};
@@ -41,7 +41,7 @@ export default defineComponent({
       }
       for (const [filename] of this.similarity.bugLocations) {
         const similarity = this.similarity.bugLocations.find(
-          (location: string) => location[0] === filename
+          (location: [string, number]) => location[0] === filename
         )[1];
         fileColor[filename] = this.colorScale(similarity);
       }
