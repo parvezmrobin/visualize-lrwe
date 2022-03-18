@@ -24,9 +24,11 @@
     :fileColor="fileColor"
   />
   <AsymmetricSimilarity v-else-if="activeTab === 'Asymmetric Similarity'" />
+  <SymmetricSimilarity v-else-if="activeTab === 'Symmetric Similarity'" />
 </template>
 <script lang="ts">
 import AsymmetricSimilarity from "@/components/bug-localization/AsymmetricSimilarity.vue";
+import SymmetricSimilarity from "@/components/bug-localization/SymmetricSimilarity.vue";
 import WordToWordSimilarity from "@/components/bug-localization/WordToWordSimilarity.vue";
 import WordToFileSimilarity from "@/components/bug-localization/WordToFileSimilarity.vue";
 import WordToBugReportSimilarity from "@/components/bug-localization/WordToBugReportSimilarity.vue";
@@ -35,6 +37,7 @@ import { defineComponent, PropType } from "vue";
 export default defineComponent({
   name: "Visualization",
   components: {
+    SymmetricSimilarity,
     AsymmetricSimilarity,
     WordToFileSimilarity,
     WordToWordSimilarity,
@@ -53,6 +56,7 @@ export default defineComponent({
         "Word To File Similarity",
         "Word To Bug Report Similarity",
         "Asymmetric Similarity",
+        "Symmetric Similarity",
       ],
       activeTab: "Word To Word Similarity",
     };

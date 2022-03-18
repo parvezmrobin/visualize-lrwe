@@ -1,7 +1,7 @@
 import { createStore } from "vuex";
 
 export interface SimilarityPayload {
-  asymmetricSimilarity: Record<string, number>;
+  symmetricSimilarity: Record<string, number>;
   bugLocations: [string, number][];
   bugReportEmbeddingPCA: [number, number][];
   bugReportToFileSimilarity: Record<string, number>;
@@ -43,7 +43,7 @@ export default createStore<State>({
   },
   getters: {
     filenames(self): string[] {
-      return Object.keys(self.similarity?.asymmetricSimilarity || {});
+      return Object.keys(self.similarity?.symmetricSimilarity || {});
     },
   },
   mutations: {},

@@ -6,7 +6,6 @@
 import { computeSvgSize, D3Selection } from "@/utils";
 import * as d3 from "d3";
 import { defineComponent } from "vue";
-import { mapGetters } from "vuex";
 
 type Datum = {
   filename: string;
@@ -17,7 +16,6 @@ export default defineComponent({
   name: "AsymmetricSimilarity",
 
   computed: {
-    ...mapGetters(["filenames"]),
     fileToBugSimilarity(): Datum[] {
       if (!this.$store.state.similarity) {
         return [];

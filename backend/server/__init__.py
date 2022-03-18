@@ -186,19 +186,19 @@ def get_word_similarities(bug_id):
     for fn, file_word_to_bug_sim in file_word_to_bug_similarities.items()
   }
 
-  asymmetric_similarity: Dict[str, np.ndarray] = {
+  symmetric_similarity: Dict[str, np.ndarray] = {
     fn: bug_to_file_similarity[fn] + file_to_bug_similarity[fn]
     for fn in bug_to_file_similarity.keys()
   }
 
   top_files = list(sorted(
-    asymmetric_similarity.keys(),
-    key=lambda fn: asymmetric_similarity[fn],
+    symmetric_similarity.keys(),
+    key=lambda fn: symmetric_similarity[fn],
     reverse=True,
   ))[:100]
 
   bug_locations = list(sorted(
-    asymmetric_similarity.items(),
+    symmetric_similarity.items(),
     key=lambda sim: sim[1],  # sort using value
     reverse=True,
   ))[:10]
@@ -249,7 +249,7 @@ def get_word_similarities(bug_id):
       bug_word_to_file_similarities, top_files),
     'bugReportToFileSimilarity': chop_dict(bug_to_file_similarity, top_files),
     'fileToBugReportSimilarity': chop_dict(file_to_bug_similarity, top_files),
-    'asymmetricSimilarity': chop_dict(asymmetric_similarity, top_files),
+    'symmetricSimilarity': chop_dict(symmetric_similarity, top_files),
     'bugLocations': bug_locations,
   }, default=_default_json_serializer)
 
