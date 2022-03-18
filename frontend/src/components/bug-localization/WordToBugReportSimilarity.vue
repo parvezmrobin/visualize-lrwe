@@ -47,7 +47,8 @@ export default defineComponent({
     },
   },
   watch: {
-    selectedFile() {
+    async selectedFile() {
+      await this.$nextTick();
       this.drawSimilarity();
     },
   },
