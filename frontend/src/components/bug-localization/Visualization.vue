@@ -52,13 +52,13 @@ export default defineComponent({
   data() {
     return {
       tabs: [
-        "Word To Word Similarity",
-        "Word To File Similarity",
-        "Word To Bug Report Similarity",
-        "Asymmetric Similarity",
         "Symmetric Similarity",
+        "Asymmetric Similarity",
+        "Word To Bug Report Similarity",
+        "Word To File Similarity",
+        "Word To Word Similarity",
       ],
-      activeTab: "Word To Word Similarity",
+      activeTab: "Symmetric Similarity",
     };
   },
 });
