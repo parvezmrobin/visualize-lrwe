@@ -35,9 +35,19 @@
         <rect x="10" y="30" width="5" height="5" fill="magenta" />
         <text x="20" y="38" fill="magenta">Selected File</text>
       </g>
+      <line
+        v-if="edgeFrom && edgeTo"
+        :x1="edgeFrom[0]"
+        :y1="edgeFrom[1]"
+        :x2="edgeTo[0]"
+        :y2="edgeTo[1]"
+        stroke-width="2px"
+        stroke="lightseagreen"
+      />
     </svg>
     <div ref="popperBugReport" class="popper br" hidden></div>
     <div ref="popperFile" class="popper file" hidden></div>
+    <div ref="popperSimilarity" class="popper similarity" hidden></div>
   </div>
 </template>
 
@@ -53,6 +63,7 @@ import { mapGetters, mapState } from "vuex";
 
 type ShowPopper = (e: MouseEvent, point: [number, number]) => void;
 const DOT_RADIUS = 3;
+const CIRCLE_RADIUS = 8;
 
 export default defineComponent({
   name: "WordToWordSimilarity",
@@ -67,19 +78,62 @@ export default defineComponent({
   data() {
     return {
       dimension: "pca",
+      edgeFrom: null as null | readonly [number, number],
+      edgeFromWord: "",
+      edgeFromIndex: -1,
+      edgeFromType: "",
+      edgeFromElement: null as null | SVGCircleElement,
+      edgeTo: null as null | readonly [number, number],
+      edgeToWord: "",
+      edgeToIndex: -1,
     };
   },
 
   computed: {
     ...mapState(["selectedBug", "selectedFile", "similarity", "tSNE"]),
     ...mapGetters(["filenames"]),
+    wordToWordSimilarities(): number[][] {
+      return this.similarity.wordToWordSimilarities[this.selectedFile];
+    },
   },
 
   watch: {
     selectedBug() {
       this.dimension = "pca";
     },
+    edgeTo() {
+      const popper = this.$refs.popperSimilarity as HTMLDivElement;
+      if (this.edgeFrom && this.edgeTo) {
+        let fileWordIndex: number, bugWordIndex: number;
+        if (this.edgeFromType === "fileEmbedding") {
+          [fileWordIndex, bugWordIndex] = [
+            this.edgeToIndex,
+            this.edgeFromIndex,
+          ];
+        } else if (this.edgeFromType === "bugReportEmbedding") {
+          [fileWordIndex, bugWordIndex] = [
+            this.edgeFromIndex,
+            this.edgeToIndex,
+          ];
+        } else {
+          throw new Error(`Invalid edgeFromType "${this.edgeFromType}"`);
+        }
+        popper.hidden = false;
+        const similarity =
+          this.wordToWordSimilarities[fileWordIndex][bugWordIndex];
+        popper.innerText = `similarity of ‘${this.edgeFromWord}’ and ‘${
+          this.edgeToWord
+        }’ is ${similarity.toFixed(2)}`;
+
+        createPopper(this.edgeFromElement as SVGCircleElement, popper, {
+          placement: this.edgeFrom[0] > this.edgeTo[0] ? "right" : "left",
+        });
+      } else {
+        popper.hidden = true;
+      }
+    },
     async selectedFile() {
+      this.edgeFrom = null;
       await this.$nextTick(); // let the svg to show
       this.drawSimilarity();
     },
@@ -193,13 +247,46 @@ export default defineComponent({
       if (group.empty()) {
         group = svg.append("g").attr("class", `plate ${key}`);
       }
+
+      const circlesWithData = svg
+        .selectAll(`.${key}.circle`)
+        .data<[number, number]>(embedding);
+      circlesWithData.exit().remove();
+      circlesWithData.enter().append("circle").attr("class", `${key} circle`);
+
       const pointsWithData = svg
         .selectAll(`.${key}.dot`)
         .data<[number, number]>(embedding);
       pointsWithData.exit().remove();
       pointsWithData.enter().append("circle").attr("class", `${key} dot`);
 
+      const getCenterFromEvent = (e: MouseEvent): readonly [number, number] => {
+        const attributes = (e.target as SVGCircleElement).attributes;
+        const edgeFrom = [
+          Number.parseFloat(attributes.getNamedItem("cx")?.value as string),
+          Number.parseFloat(attributes.getNamedItem("cy")?.value as string),
+        ] as const;
+        return edgeFrom;
+      };
+
       // now take all points (existing + appended) and set/update position
+      const edgeStartListener = (e: MouseEvent, point: [number, number]) => {
+        this.edgeFrom = getCenterFromEvent(e);
+        this.edgeFromIndex = embedding.indexOf(point);
+        this.edgeFromWord = tokens[this.edgeFromIndex];
+        this.edgeFromType = key;
+        this.edgeFromElement = e.target as SVGCircleElement;
+      };
+
+      const edgeEndListener = (e: MouseEvent, point: [number, number]) => {
+        if (!this.edgeFrom || this.edgeFromType === key) {
+          return;
+        }
+        this.edgeTo = getCenterFromEvent(e);
+        this.edgeToIndex = embedding.indexOf(point);
+        this.edgeToWord = tokens[this.edgeToIndex];
+      };
+
       svg
         .selectAll<SVGCircleElement, [number, number]>(`circle.${key}.dot`)
         .on(
@@ -207,29 +294,43 @@ export default defineComponent({
           this.createShowPopperFunction(
             embedding,
             this.$refs.popperFile as HTMLDivElement,
-            tokens
+            tokens,
+            edgeEndListener
           )
         )
         .on("mouseout", () => {
           const popper = this.$refs.popperFile as HTMLDivElement;
           popper.hidden = true;
         })
+        .on("click", edgeStartListener)
         .transition()
         .attr("cx", (d) => xScale(d[0]))
         .attr("cy", (d) => yScale(d[1]))
         .attr("r", DOT_RADIUS)
         .style("fill", color);
+
+      svg
+        .selectAll<SVGCircleElement, [number, number]>(`circle.${key}.circle`)
+        .attr("cx", (d) => xScale(d[0]))
+        .attr("cy", (d) => yScale(d[1]))
+        .attr("r", CIRCLE_RADIUS)
+        .style("fill", "transparent")
+        .on("click", edgeStartListener)
+        .on("mouseenter", edgeEndListener)
+        .on("mouseout", () => {
+          this.edgeTo = null;
+        });
     },
 
     createShowPopperFunction(
       embedding: [number, number][],
       popper: HTMLDivElement,
-      words: string[]
+      words: string[],
+      callback?: (e: MouseEvent, point: [number, number]) => void
     ): ShowPopper {
       console.assert(embedding.length === words.length);
       return (e: MouseEvent, point) => {
         const index = embedding.indexOf(point);
-        console.log("index", index);
         const word = words[index];
 
         popper.hidden = false;
@@ -238,6 +339,10 @@ export default defineComponent({
         createPopper(e.target as HTMLElement, popper, {
           placement: "right",
         });
+
+        if (callback) {
+          callback(e, point);
+        }
       };
     },
   },
@@ -264,6 +369,11 @@ svg {
 
   &.file {
     background-color: darkmagenta;
+    color: white;
+  }
+
+  &.similarity {
+    background-color: lightseagreen;
     color: white;
   }
 }
