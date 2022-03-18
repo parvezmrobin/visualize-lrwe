@@ -47,7 +47,8 @@ export default defineComponent({
     margin() {
       return {
         x: 150,
-        y: 10,
+        top: 35,
+        bottom: 10,
       };
     },
   },
@@ -71,7 +72,7 @@ export default defineComponent({
       const fileToBugScale = d3
         .scaleBand()
         .domain(filenames)
-        .range([this.margin.y, size - this.margin.y])
+        .range([this.margin.top, size - this.margin.bottom])
         .padding(0.55);
       return fileToBugScale;
     },
@@ -122,14 +123,12 @@ export default defineComponent({
       right = false,
       xRange = 0
     ): void {
-      let fileToBugAxis: D3Selection<SVGGElement> = d3Svg.select(
-        `.axis.${cls}`
-      );
+      let yAxis: D3Selection<SVGGElement> = d3Svg.select(`.axis.${cls}`);
       const getFilenameFromDatum = (d: string) => {
         return d.replaceAll("\\", "/").split("/").slice(-1)[0];
       };
-      if (fileToBugAxis.empty()) {
-        fileToBugAxis = d3Svg
+      if (yAxis.empty()) {
+        yAxis = d3Svg
           .append("g")
           .attr("class", `axis ${cls}`)
           .attr(
@@ -139,16 +138,29 @@ export default defineComponent({
             }, 0)`
           )
           .call(d3[right ? "axisRight" : "axisLeft"](yScale).tickSizeOuter(0));
-        fileToBugAxis
+        yAxis
           .selectAll<SVGTextElement, string>("text")
           .text(getFilenameFromDatum);
       } else {
-        fileToBugAxis
+        yAxis
           .transition()
           .call(d3[right ? "axisRight" : "axisLeft"](yScale).tickSizeOuter(0))
           .selectAll<SVGTextElement, string>("text")
           .text(getFilenameFromDatum);
       }
+
+      let title = yAxis.select<SVGTextElement>("text.title");
+      if (title.empty()) {
+        title = yAxis
+          .append<SVGTextElement>("text")
+          .attr("class", "title")
+          .attr("y", 20)
+          .style("font-size", "16px")
+          .style("text-transform", "capitalize")
+          .style("fill", "black");
+      }
+
+      title.text(cls.replaceAll("-", " "));
     },
     drawSimilarity() {
       const d3Svg = d3.select(this.$refs.svg as SVGElement);
