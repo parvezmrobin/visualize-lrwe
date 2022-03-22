@@ -62,35 +62,54 @@ export default defineComponent({
   },
 
   methods: {
+    _makeXScale: function (
+      size: number,
+      similarityObject: Datum[]
+    ): d3.ScaleLinear<number, number> {
+      const similarities = similarityObject.map(({ similarity }) => similarity);
+      return d3
+        .scaleLinear()
+        .domain([Math.min(...similarities), Math.max(...similarities)])
+        .range([0, size - 2 * this.margin.x]);
+    },
+    _makeColorScale: function (
+      size: number,
+      similarityObject: Datum[]
+    ): d3.ScaleLinear<string, number> {
+      const similarities = similarityObject.map(({ similarity }) => similarity);
+      return d3
+        .scaleLinear<string, number>()
+        .domain([Math.min(...similarities), Math.max(...similarities)])
+        .range(["lightseagreen", "#aa1123"]);
+    },
     _makeYScale: function (
       size: number,
       similarityObject: Datum[]
     ): d3.ScalePoint<string> {
       const filenames = similarityObject.map(({ filename }) => filename);
-      const fileToBugScale = d3
+      const yScale = d3
         .scaleBand()
         .domain(filenames)
         .range([this.margin.top, size - this.margin.bottom])
         .padding(0.55);
-      return fileToBugScale;
+      return yScale;
     },
     _drawBars: function (
       d3Svg: D3Selection<SVGElement>,
+      data: Datum[],
       yScale: d3.ScalePoint<string>,
       xScale: d3.ScaleLinear<number, number>,
       barColorScale: d3.ScaleLinear<string, number>,
       cls: string,
       right = false
     ): void {
-      const fileToBugBars = d3Svg
-        .selectAll(`rect.${cls}`)
-        .data(this.fileToBugSimilarity);
+      const fileToBugBars = d3Svg.selectAll(`rect.${cls}`).data(data);
       fileToBugBars.exit().remove();
       fileToBugBars.enter().append("rect").attr("class", `bar ${cls}`);
       const rectangles = d3Svg
         .selectAll<SVGRectElement, Datum>(`rect.bar.${cls}`)
         .transition()
-        .attr("x", this.margin.x)
+        .attr("x", right ? 0 : this.margin.x)
         .attr("y", (d) => {
           const basePosition = yScale(d.filename) as number;
           return (
@@ -131,19 +150,18 @@ export default defineComponent({
           .attr("class", `axis ${cls}`)
           .attr(
             "transform",
-            `translate(${
-              this.margin.x + (right ? xRange + this.margin.x : 0)
-            }, 0)`
+            `translate(${this.margin.x + (right ? xRange : 0)}, 0)`
           )
           .call(d3[right ? "axisRight" : "axisLeft"](yScale).tickSizeOuter(0));
         yAxis
           .selectAll<SVGTextElement, string>("text")
+          .attr("class", "filename")
           .text(getFilenameFromDatum);
       } else {
         yAxis
           .transition()
           .call(d3[right ? "axisRight" : "axisLeft"](yScale).tickSizeOuter(0))
-          .selectAll<SVGTextElement, string>("text")
+          .selectAll<SVGTextElement, string>("text.filename")
           .text(getFilenameFromDatum);
       }
 
@@ -165,48 +183,44 @@ export default defineComponent({
       const size = computeSvgSize(d3Svg.node() as SVGElement);
       d3Svg.style("height", `${size}px`).style("width", `${size}px`);
 
-      const fileToBugScale = this._makeYScale(size, this.fileToBugSimilarity);
-      const bugToFileScale = this._makeYScale(size, this.bugToFileSimilarity);
+      const fileToBugYScale = this._makeYScale(size, this.fileToBugSimilarity);
+      const bugToFileYScale = this._makeYScale(size, this.bugToFileSimilarity);
 
-      const allSimilarity = [
-        ...this.fileToBugSimilarity.map(({ similarity }) => similarity),
-        ...this.bugToFileSimilarity.map(({ similarity }) => similarity),
-      ];
-      const similarityDomain = [
-        Math.min(...allSimilarity),
-        Math.max(...allSimilarity),
-      ];
-      const xScale = d3
-        .scaleLinear()
-        .domain(similarityDomain)
-        .range([this.margin.x, size - 2 * this.margin.x]);
-      const barColorScale = d3
-        .scaleLinear<string, number>()
-        .domain(similarityDomain)
-        .range(["lightseagreen", "#aa1123"]);
+      const fileToBugXScale = this._makeXScale(size, this.fileToBugSimilarity);
+      const bugToFileXScale = this._makeXScale(size, this.bugToFileSimilarity);
+      const fileToBugColorScale = this._makeColorScale(
+        size,
+        this.fileToBugSimilarity
+      );
+      const bugToFileColorScale = this._makeColorScale(
+        size,
+        this.bugToFileSimilarity
+      );
 
       this._drawBars(
         d3Svg,
-        fileToBugScale,
-        xScale,
-        barColorScale,
+        this.fileToBugSimilarity,
+        fileToBugYScale,
+        fileToBugXScale,
+        fileToBugColorScale,
         "file-to-bug"
       );
       this._drawBars(
         d3Svg,
-        bugToFileScale,
-        xScale,
-        barColorScale,
+        this.bugToFileSimilarity,
+        bugToFileYScale,
+        bugToFileXScale,
+        bugToFileColorScale,
         "bug-to-file",
         true
       );
-      this._drawAxis(d3Svg, fileToBugScale, "file-to-bug");
+      this._drawAxis(d3Svg, fileToBugYScale, "file-to-bug");
       this._drawAxis(
         d3Svg,
-        bugToFileScale,
+        bugToFileYScale,
         "bug-to-file",
         true,
-        xScale.range()[1] - xScale.range()[0]
+        fileToBugXScale.range()[1] - fileToBugXScale.range()[0]
       );
     },
   },
