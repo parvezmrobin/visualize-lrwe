@@ -91,20 +91,27 @@ export default defineComponent({
         .style("fill", (d) => barColorScale(d.similarity));
 
       let axis: D3Selection<SVGGElement> = d3Svg.select(".axis");
+
+      const getFilenameFromDatum = (d: string) => {
+        return d.replaceAll("\\", "/").split("/").slice(-1)[0];
+      };
+
       if (axis.empty()) {
         axis = d3Svg
           .append("g")
           .attr("class", "axis")
           .attr("transform", `translate(${margin.left}, 0)`)
           .call(d3.axisLeft(yScale).tickSizeOuter(0));
+        axis
+          .selectAll<SVGTextElement, string>("text")
+          .text(getFilenameFromDatum);
       } else {
-        axis.transition().call(d3.axisLeft(yScale).tickSizeOuter(0));
+        axis
+          .transition()
+          .call(d3.axisLeft(yScale).tickSizeOuter(0))
+          .selectAll<SVGTextElement, string>("text")
+          .text(getFilenameFromDatum);
       }
-
-      const getFilenameFromDatum = (d: string) => {
-        return d.replaceAll("\\", "/").split("/").slice(-1)[0];
-      };
-      axis.selectAll<SVGTextElement, string>("text").text(getFilenameFromDatum);
     },
   },
 });
