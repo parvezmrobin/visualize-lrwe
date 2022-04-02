@@ -65,15 +65,11 @@ def get_tsne_dimensions(bug_id):
 
   bug_report_embedding = get_embedding_of_file(bug_report, embedding_index)
 
-  filenames = request.json['filenames']
-  top_word_indices = request.json['topWordIndices']
-
   segments: List[np.ndarray] = [bug_report_embedding]
   segment_indices: Dict[str, Tuple[int, int]] = {}
 
   curr_ending_idx = len(bug_report_embedding)
-  for filename in filenames:
-    top_word_index = top_word_indices[filename]
+  for filename, top_word_index in request.json.items():
     file_embedding = file_embeddings[filename][top_word_index]
     segments.append(file_embedding)
     segment_indices[filename] = (

@@ -53,7 +53,7 @@
 
 <script lang="ts">
 import SelectFile from "@/components/bug-localization/SelectFile.vue";
-import { TSNEPayload } from "@/store";
+import { SimilarityPayload, TSNEPayload } from "@/store";
 import { computeSvgSize, D3Selection } from "@/utils";
 import { createPopper } from "@popperjs/core";
 import axios from "axios";
@@ -140,12 +140,10 @@ export default defineComponent({
     async dimension() {
       if (this.dimension === "tsne" && !this.tSNE) {
         this.$store.state.isLoading = true;
+        const similarity = this.similarity as SimilarityPayload | undefined;
         const resp = await axios.post<TSNEPayload>(
           `/bug/${this.selectedBug}/tsne`,
-          {
-            filenames: Object.keys(this.similarity?.asymmetricSimilarity),
-            topWordIndices: this.similarity?.topWordIndices,
-          }
+          similarity?.topWordIndices
         );
         await this.$store.dispatch("updateTSNEData", resp.data);
         this.$store.state.isLoading = false;
