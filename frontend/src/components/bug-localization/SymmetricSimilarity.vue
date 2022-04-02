@@ -13,11 +13,19 @@
       />
     </div>
   </div>
+
   <svg class="border border-info rounded" ref="svg"></svg>
+
+  <div
+    v-once
+    ref="tooltip"
+    class="px-2 py-1 rounded shadow position-fixed"
+    style="visibility: hidden; z-index: 1"
+  />
 </template>
 
 <script lang="ts">
-import { computeSvgSize, D3Selection } from "@/utils";
+import { addFilenameHoverSupport, computeSvgSize, D3Selection } from "@/utils";
 import * as d3 from "d3";
 import { defineComponent } from "vue";
 
@@ -132,6 +140,7 @@ export default defineComponent({
           .selectAll<SVGTextElement, string>("text")
           .text(getFilenameFromDatum);
       }
+      addFilenameHoverSupport(axis, this.$refs.tooltip);
     },
   },
 });

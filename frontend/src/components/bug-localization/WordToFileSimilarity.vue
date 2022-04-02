@@ -41,7 +41,12 @@
 
 <script lang="ts">
 import { State } from "@/store";
-import { computeSvgSize, D3Selection, formatFileTick } from "@/utils";
+import {
+  computeSvgSize,
+  D3Selection,
+  formatFileTick,
+  makeTooltipUtils,
+} from "@/utils";
 import * as d3 from "d3";
 import { defineComponent } from "vue";
 import { mapState } from "vuex";
@@ -158,17 +163,9 @@ export default defineComponent({
           [xScale(groups[1]), yScales[1](d.filename)],
         ]);
       };
-
-      const tooltip = d3.select(this.$refs.tooltip as HTMLDivElement);
-
-      const hideTooltip = () => {
-        tooltip.style("visibility", "hidden");
-      };
-      const moveTooltip = (e: MouseEvent) => {
-        tooltip
-          .style("bottom", `calc(100vh - ${e.y - 5}px)`)
-          .style("right", `calc(100vw - ${e.x}px)`);
-      };
+      const { tooltip, hideTooltip, moveTooltip } = makeTooltipUtils(
+        this.$refs.tooltip
+      );
 
       const edges = this.d3Svg.selectAll("path.edge").data(rows);
       edges.exit().remove();
