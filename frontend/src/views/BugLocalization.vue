@@ -32,7 +32,7 @@ export default defineComponent({
       );
       return scaleLinear<string>()
         .domain([Math.min(...similarities), Math.max(...similarities)])
-        .range(["#0c5ea022", "#e01e1cee"])
+        .range(["#0c5ea022", "#d55e00"])
         .interpolate(interpolateLab);
     },
     fileColor(): Record<string, string> {
