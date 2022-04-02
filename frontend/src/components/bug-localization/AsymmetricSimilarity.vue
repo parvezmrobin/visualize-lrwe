@@ -1,4 +1,18 @@
 <template>
+  <div class="mb-3 row">
+    <label for="num-file" class="col-auto col-form-label">
+      Number of Files to Show
+    </label>
+    <div class="col-sm-2">
+      <input
+        type="number"
+        v-model.number="numFile"
+        name="num-file"
+        id="num-file"
+        class="form-control"
+      />
+    </div>
+  </div>
   <svg class="border border-info rounded" ref="svg"></svg>
 </template>
 
@@ -15,6 +29,12 @@ type Datum = {
 export default defineComponent({
   name: "AsymmetricSimilarity",
 
+  data() {
+    return {
+      numFile: 30,
+    };
+  },
+
   computed: {
     fileToBugSimilarity(): Datum[] {
       if (!this.$store.state.similarity) {
@@ -22,7 +42,7 @@ export default defineComponent({
       }
       const { fileToBugReportSimilarity } = this.$store.state.similarity;
       return Object.entries(fileToBugReportSimilarity)
-        .slice(0, 30)
+        .slice(0, this.numFile)
         .map(([filename, similarity]) => ({
           filename,
           similarity,
@@ -35,7 +55,7 @@ export default defineComponent({
 
       const { bugReportToFileSimilarity } = this.$store.state.similarity;
       return Object.entries(bugReportToFileSimilarity)
-        .slice(0, 30)
+        .slice(0, this.numFile)
         .map(([filename, similarity]) => ({
           filename,
           similarity,
@@ -53,6 +73,9 @@ export default defineComponent({
 
   watch: {
     "$store.state.similarity"() {
+      this.drawSimilarity();
+    },
+    numFile() {
       this.drawSimilarity();
     },
   },
