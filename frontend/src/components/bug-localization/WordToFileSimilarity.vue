@@ -41,12 +41,11 @@
 
 <script lang="ts">
 import { State } from "@/store";
-import { computeSvgSize, formatFileTick } from "@/utils";
+import { computeSvgSize, D3Selection, formatFileTick } from "@/utils";
 import * as d3 from "d3";
 import { defineComponent } from "vue";
 import { mapState } from "vuex";
 
-let axes: d3.Selection<SVGGElement, string, SVGElement, unknown>;
 type Datum = { filename: string; similarity: number; bugReportToken: string };
 
 export default defineComponent({
@@ -200,9 +199,11 @@ export default defineComponent({
         .style("stroke", (d) => edgeColorScale(d.similarity))
         .style("stroke-width", "2px");
 
-      if (!axes) {
+      let axes: D3Selection<SVGGElement, string> = d3.selectAll("g.axis");
+
+      if (axes.empty()) {
         axes = this.d3Svg
-          .selectAll(".axis")
+          .selectAll("g.axis")
           .data<string>(groups)
           .enter()
           .append("g")
