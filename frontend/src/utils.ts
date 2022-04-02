@@ -71,11 +71,11 @@ export function addFilenameHoverSupport(
 
 export function makeColorScale(
   domain: readonly [number, number]
-): d3.ScaleLinear<string, string> {
+): d3.ScaleLinear<d3.RGBColor, string> {
   const colorScale = d3
-    .scaleLinear<string>()
+    .scaleLinear<d3.RGBColor>()
     .domain(domain)
-    .range(["royalblue", "#aa1123"])
+    .range([d3.rgb(0, 114, 178), d3.rgb(213, 94, 0)])
     .interpolate(d3.interpolateLab);
   return colorScale;
 }

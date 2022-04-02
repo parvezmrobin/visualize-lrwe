@@ -111,7 +111,7 @@ export default defineComponent({
     _makeColorScale: function (
       size: number,
       similarityObject: Datum[]
-    ): d3.ScaleLinear<string, string> {
+    ): d3.ScaleLinear<d3.RGBColor, string> {
       const similarities = similarityObject.map(({ similarity }) => similarity);
       return makeColorScale([
         Math.min(...similarities),
@@ -135,7 +135,7 @@ export default defineComponent({
       data: Datum[],
       yScale: d3.ScalePoint<string>,
       xScale: d3.ScaleLinear<number, number>,
-      barColorScale: d3.ScaleLinear<string, string>,
+      barColorScale: d3.ScaleLinear<d3.RGBColor, string>,
       cls: string,
       right = false
     ): void {
