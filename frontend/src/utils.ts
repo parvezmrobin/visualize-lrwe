@@ -1,4 +1,5 @@
 import type { BaseType, Selection } from "d3";
+import * as d3 from "d3";
 import { select } from "d3";
 
 export function computeSvgSize(svg: SVGElement): number {
@@ -66,4 +67,15 @@ export function addFilenameHoverSupport(
     })
     .on("mousemove", moveTooltip)
     .on("mouseout", hideTooltip);
+}
+
+export function makeColorScale(
+  domain: readonly [number, number]
+): d3.ScaleLinear<string, string> {
+  const colorScale = d3
+    .scaleLinear<string>()
+    .domain(domain)
+    .range(["royalblue", "#aa1123"])
+    .interpolate(d3.interpolateLab);
+  return colorScale;
 }

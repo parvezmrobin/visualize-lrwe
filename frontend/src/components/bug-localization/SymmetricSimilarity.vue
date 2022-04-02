@@ -25,7 +25,12 @@
 </template>
 
 <script lang="ts">
-import { addFilenameHoverSupport, computeSvgSize, D3Selection } from "@/utils";
+import {
+  addFilenameHoverSupport,
+  computeSvgSize,
+  D3Selection,
+  makeColorScale,
+} from "@/utils";
 import * as d3 from "d3";
 import { defineComponent } from "vue";
 
@@ -84,7 +89,7 @@ export default defineComponent({
       const similarityDomain = [
         Math.min(...similarities),
         Math.max(...similarities),
-      ];
+      ] as const;
 
       const xScale = d3
         .scaleLinear()
@@ -98,10 +103,7 @@ export default defineComponent({
         .padding(0.1)
         .paddingOuter(0);
 
-      const barColorScale = d3
-        .scaleLinear<string>()
-        .domain(similarityDomain)
-        .range(["lightseagreen", "#aa1123"]);
+      const barColorScale = makeColorScale(similarityDomain);
 
       const bars = d3Svg.selectAll("rect.bar").data(this.similarity);
       bars.exit().remove();

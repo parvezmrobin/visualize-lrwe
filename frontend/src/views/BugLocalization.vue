@@ -14,7 +14,7 @@
 <script lang="ts">
 import LeftPanel from "@/components/bug-localization/LeftPanel.vue";
 import Visualization from "@/components/bug-localization/Visualization.vue";
-import { scaleLinear, ScaleLinear } from "d3";
+import { interpolateLab, scaleLinear, ScaleLinear } from "d3";
 import { defineComponent } from "vue";
 import { mapState } from "vuex";
 
@@ -32,7 +32,8 @@ export default defineComponent({
       );
       return scaleLinear<string>()
         .domain([Math.min(...similarities), Math.max(...similarities)])
-        .range(["#0c5ea022", "#e01e1cee"]);
+        .range(["#0c5ea022", "#e01e1cee"])
+        .interpolate(interpolateLab);
     },
     fileColor(): Record<string, string> {
       const fileColor: Record<string, string> = {};

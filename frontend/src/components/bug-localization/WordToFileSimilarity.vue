@@ -45,6 +45,7 @@ import {
   computeSvgSize,
   D3Selection,
   formatFileTick,
+  makeColorScale,
   makeTooltipUtils,
 } from "@/utils";
 import * as d3 from "d3";
@@ -151,10 +152,10 @@ export default defineComponent({
       );
 
       const similarities = rows.map((row) => row.similarity);
-      const edgeColorScale = d3
-        .scaleLinear<string>()
-        .domain([Math.min(...similarities), Math.max(...similarities)])
-        .range(["lightseagreen", "#aa1123"]);
+      const edgeColorScale = makeColorScale([
+        Math.min(...similarities),
+        Math.max(...similarities),
+      ]);
 
       type NullableNumber = number | undefined;
       const path = (d: Datum) => {

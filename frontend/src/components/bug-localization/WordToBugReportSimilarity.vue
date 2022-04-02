@@ -16,7 +16,7 @@
 </template>
 
 <script lang="ts">
-import { computeSvgSize, D3Selection } from "@/utils";
+import { computeSvgSize, D3Selection, makeColorScale } from "@/utils";
 import * as d3 from "d3";
 import { defineComponent, PropType } from "vue";
 import SelectFile from "@/components/bug-localization/SelectFile.vue";
@@ -83,7 +83,7 @@ export default defineComponent({
       const similarityDomain = [
         Math.min(...this.fileWordToBugSimilarities),
         Math.max(...this.fileWordToBugSimilarities),
-      ];
+      ] as const;
       const xScale = d3
         .scaleLinear()
         .domain(similarityDomain)
@@ -95,10 +95,7 @@ export default defineComponent({
         .range([margin.top, size - margin.bottom])
         .padding(1 / this.fileWords.length + 0.1);
 
-      const barColorScale = d3
-        .scaleLinear<string>()
-        .domain(similarityDomain)
-        .range(["lightseagreen", "#aa1123"]);
+      const barColorScale = makeColorScale(similarityDomain);
 
       type Datum = {
         word: string;
