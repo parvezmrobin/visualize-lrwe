@@ -205,6 +205,7 @@ export default defineComponent({
           .data<string>(groups)
           .enter()
           .append("g")
+          .attr("class", "axis")
           .attr("transform", (d) => `translate(${xScale(d)})`)
           .each(function (group, i) {
             const axisPlacement = i % 2 ? "axisRight" : "axisLeft";
