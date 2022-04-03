@@ -127,7 +127,7 @@ export default defineComponent({
         .scaleBand()
         .domain(filenames)
         .range([this.margin.top, size - this.margin.bottom])
-        .padding(0.55);
+        .padding(0.6);
       return yScale;
     },
     _drawBars: function (
@@ -245,7 +245,8 @@ export default defineComponent({
         yAxis
           .transition()
           .call(d3[right ? "axisRight" : "axisLeft"](yScale).tickSizeOuter(0))
-          .selectAll<SVGTextElement, string>("text.filename")
+          .selectAll<SVGTextElement, string>("line+text")
+          .attr("class", "filename")
           .text(getFilenameFromDatum);
       }
 
