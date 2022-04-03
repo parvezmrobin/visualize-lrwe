@@ -1,22 +1,36 @@
 <template>
   <div class="mb-3 row" v-show="filenames.length">
-    <SelectFile :file-color="fileColor" />
+    <SelectFile :file-color="fileColor" col-class="col-sm-4" />
+
+    <label for="num-words" class="col-auto col-form-label">
+      Number of Words
+    </label>
+    <div class="col-sm-2">
+      <input
+        type="number"
+        v-model.number="numWords"
+        name="num-words"
+        id="num-words"
+        class="form-control"
+        min="2"
+      />
+    </div>
   </div>
 
   <div v-show="selectedFile" style="position: relative">
     <svg class="border border-info rounded" ref="svg">
       <g id="legend">
-        <rect x="10" y="10" width="5" height="5" fill="#aa1123" />
-        <text x="20" y="18" fill="#aa1123">Maximum</text>
-        <rect x="10" y="30" width="5" height="5" fill="lightseagreen" />
-        <text x="20" y="38" fill="lightseagreen">Minimum</text>
+        <rect x="10" y="10" width="5" height="5" :fill="Colors.Vermilion" />
+        <text x="20" y="18" :fill="Colors.Vermilion">Maximum</text>
+        <rect x="10" y="30" width="5" height="5" :fill="Colors.Blue" />
+        <text x="20" y="38" :fill="Colors.Blue">Minimum</text>
       </g>
     </svg>
   </div>
 </template>
 
 <script lang="ts">
-import { computeSvgSize, D3Selection, makeColorScale } from "@/utils";
+import { Colors, computeSvgSize, D3Selection, makeColorScale } from "@/utils";
 import * as d3 from "d3";
 import { defineComponent, PropType } from "vue";
 import SelectFile from "@/components/bug-localization/SelectFile.vue";
@@ -31,23 +45,33 @@ export default defineComponent({
       required: true,
     },
   },
+  data() {
+    return {
+      numWords: 30,
+      Colors,
+    };
+  },
   computed: {
     ...mapState(["selectedFile"]),
     ...mapGetters(["filenames"]),
     fileWordToBugSimilarities() {
       return this.$store.state.similarity?.fileWordToBugSimilarity[
         this.selectedFile
-      ].slice(0, 30);
+      ].slice(0, this.numWords);
     },
     fileWords() {
       return this.$store.state.similarity?.fileTokens[this.selectedFile].slice(
         0,
-        30
+        this.numWords
       );
     },
   },
   watch: {
     async selectedFile() {
+      await this.$nextTick();
+      this.drawSimilarity();
+    },
+    async numWords() {
       await this.$nextTick();
       this.drawSimilarity();
     },

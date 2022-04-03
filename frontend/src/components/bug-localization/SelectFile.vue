@@ -1,6 +1,6 @@
 <template>
   <label for="select-file" class="col-auto col-form-label">Select A File</label>
-  <div class="col-sm-6">
+  <div :class="colClass">
     <select class="form-control" id="select-file" v-model="selectedFile">
       <option
         :key="file"
@@ -23,6 +23,10 @@ export default defineComponent({
     fileColor: {
       type: Object as PropType<Record<string, string>>,
       required: true,
+    },
+    colClass: {
+      type: String,
+      default: "col-sm-6",
     },
   },
   computed: {
