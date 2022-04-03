@@ -177,9 +177,18 @@ export default defineComponent({
         .enter()
         .append("path")
         .attr("class", "edge")
-        .on("mouseover", (e, d) => {
-          const path = e.currentTarget as SVGPathElement;
-          path.style.stroke = "black";
+        .on("mouseover", function (e, d) {
+          const path = this as SVGPathElement;
+          const siblings = path.parentElement?.getElementsByClassName("edge");
+          if (!siblings) {
+            throw new Error();
+          }
+          for (const sibling of siblings) {
+            if (sibling !== path) {
+              (sibling as SVGPathElement).style.opacity = "0.33";
+            }
+          }
+
           const similarity = d.similarity.toFixed(3);
           const edgeInfo = `<span class="text-white">Similarity of ‘${
             d.bugReportToken
@@ -192,9 +201,15 @@ export default defineComponent({
             .style("background-color", edgeColorScale(d.similarity));
         })
         .on("mousemove", moveTooltip)
-        .on("mouseout", (e, d) => {
-          const path = e.currentTarget as SVGPathElement;
-          path.style.stroke = edgeColorScale(d.similarity);
+        .on("mouseout", function () {
+          const path = this as SVGPathElement;
+          const siblings = path.parentElement?.getElementsByClassName("edge");
+          if (!siblings) {
+            throw new Error();
+          }
+          for (const sibling of siblings) {
+            (sibling as SVGPathElement).style.opacity = "1";
+          }
           hideTooltip();
         });
 
