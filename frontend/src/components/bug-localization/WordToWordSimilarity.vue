@@ -286,19 +286,22 @@ export default defineComponent({
         this.edgeToWord = tokens[this.edgeToIndex];
       };
 
+      const popperEl = this.$refs[
+        key === "fileEmbedding" ? "popperFile" : "popperBugReport"
+      ] as HTMLDivElement;
       svg
         .selectAll<SVGCircleElement, [number, number]>(`circle.${key}.dot`)
         .on(
           "mouseenter",
           this.createShowPopperFunction(
             embedding,
-            this.$refs.popperFile as HTMLDivElement,
+            popperEl,
             tokens,
             edgeEndListener
           )
         )
         .on("mouseout", () => {
-          const popper = this.$refs.popperFile as HTMLDivElement;
+          const popper = popperEl;
           popper.hidden = true;
         })
         .on("click", edgeStartListener)
@@ -362,12 +365,12 @@ svg {
   border-radius: 2px;
 
   &.br {
-    background-color: v-bind("Colors.Vermilion");
+    background-color: v-bind("Colors.Blue");
     color: wheat;
   }
 
   &.file {
-    background-color: v-bind("Colors.Blue");
+    background-color: v-bind("Colors.Vermilion");
     color: white;
   }
 
