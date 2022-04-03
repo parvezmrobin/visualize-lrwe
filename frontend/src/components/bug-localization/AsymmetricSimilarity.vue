@@ -298,7 +298,18 @@ export default defineComponent({
           .style("fill", "black");
       }
 
-      title.text(cls.replaceAll("-", " "));
+      if (this.mirror) {
+        title.attr("x", 0).text(cls.replaceAll("-", " "));
+      } else {
+        const titleWords = cls.split("-");
+        title
+          .attr("x", this.margin.x)
+          .text(
+            `${titleWords.join(" ")} followed by ${titleWords
+              .reverse()
+              .join(" ")}`
+          );
+      }
     },
     drawSimilarity() {
       const d3Svg = d3.select(this.$refs.svg as SVGElement);
