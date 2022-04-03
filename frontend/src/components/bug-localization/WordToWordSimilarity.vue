@@ -30,10 +30,10 @@
   <div v-show="selectedFile" style="position: relative">
     <svg class="border border-info rounded" ref="svg">
       <g id="legend">
-        <rect x="10" y="10" width="5" height="5" fill="cyan" />
-        <text x="20" y="18" fill="cyan">Bug Report</text>
-        <rect x="10" y="30" width="5" height="5" fill="magenta" />
-        <text x="20" y="38" fill="magenta">Selected File</text>
+        <rect x="10" y="10" width="5" height="5" :fill="Colors.Blue" />
+        <text x="20" y="18" :fill="Colors.Blue">Bug Report</text>
+        <rect x="10" y="30" width="5" height="5" :fill="Colors.Vermilion" />
+        <text x="20" y="38" :fill="Colors.Vermilion">Selected File</text>
       </g>
       <line
         v-if="edgeFrom && edgeTo"
@@ -42,7 +42,7 @@
         :x2="edgeTo[0]"
         :y2="edgeTo[1]"
         stroke-width="2px"
-        stroke="lightseagreen"
+        :stroke="Colors.Blue"
       />
     </svg>
     <div ref="popperBugReport" class="popper br" hidden></div>
@@ -54,7 +54,7 @@
 <script lang="ts">
 import SelectFile from "@/components/bug-localization/SelectFile.vue";
 import { SimilarityPayload, TSNEPayload } from "@/store";
-import { computeSvgSize, D3Selection } from "@/utils";
+import { Colors, computeSvgSize, D3Selection } from "@/utils";
 import { createPopper } from "@popperjs/core";
 import axios from "axios";
 import * as d3 from "d3";
@@ -86,6 +86,7 @@ export default defineComponent({
       edgeTo: null as null | readonly [number, number],
       edgeToWord: "",
       edgeToIndex: -1,
+      Colors: Colors,
     };
   },
 
@@ -208,12 +209,12 @@ export default defineComponent({
         bugReportEmbedding: [
           bugReportEmbedding,
           this.similarity.bugReportTokens,
-          "cyan",
+          Colors.Blue,
         ] as const,
         fileEmbedding: [
           fileEmbedding,
           this.similarity.fileTokens[this.selectedFile],
-          "magenta",
+          Colors.Vermilion,
         ] as const,
       };
 
@@ -361,17 +362,17 @@ svg {
   border-radius: 2px;
 
   &.br {
-    background-color: #2c3e50;
+    background-color: v-bind("Colors.Vermilion");
     color: wheat;
   }
 
   &.file {
-    background-color: darkmagenta;
+    background-color: v-bind("Colors.Blue");
     color: white;
   }
 
   &.similarity {
-    background-color: lightseagreen;
+    background-color: v-bind("Colors.Blue");
     color: white;
   }
 }

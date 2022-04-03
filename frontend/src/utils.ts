@@ -69,13 +69,18 @@ export function addFilenameHoverSupport(
     .on("mouseout", hideTooltip);
 }
 
+export const Colors = {
+  Vermilion: d3.rgb(213, 94, 0).toString(),
+  Blue: d3.rgb(0, 114, 178).toString(),
+};
+
 export function makeColorScale(
   domain: readonly [number, number]
-): d3.ScaleLinear<d3.RGBColor, string> {
+): d3.ScaleLinear<string, string> {
   const colorScale = d3
-    .scaleLinear<d3.RGBColor>()
+    .scaleLinear<string>()
     .domain(domain)
-    .range([d3.rgb(0, 114, 178), d3.rgb(213, 94, 0)])
+    .range([Colors.Blue, Colors.Vermilion])
     .interpolate(d3.interpolateLab);
   return colorScale;
 }
