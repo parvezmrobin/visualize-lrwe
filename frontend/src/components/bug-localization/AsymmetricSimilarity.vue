@@ -1,5 +1,5 @@
 <template>
-  <div class="mb-3 row">
+  <div class="mb-3 row align-items-center">
     <label for="num-file" class="col-auto col-form-label">
       Number of Files to Show
     </label>
@@ -11,6 +11,41 @@
         id="num-file"
         class="form-control"
       />
+    </div>
+
+    <div
+      v-show="!stack"
+      class="col-auto"
+      data-bs-toggle="tooltip"
+      data-bs-placement="bottom"
+      title="Show two asymmetric similarities for a file in opposite direction"
+    >
+      <div class="form-check form-check-inline form-switch">
+        <input
+          class="form-check-input"
+          type="checkbox"
+          id="mirror"
+          v-model="mirror"
+        />
+        <label class="form-check-label" for="mirror"> Mirror Bars </label>
+      </div>
+    </div>
+
+    <div
+      class="col-auto"
+      data-bs-toggle="tooltip"
+      data-bs-placement="bottom"
+      title="Stack two asymmetric similarities on top of each other"
+    >
+      <div class="form-check form-check-inline form-switch">
+        <input
+          class="form-check-input"
+          type="checkbox"
+          id="stack"
+          v-model="stack"
+        />
+        <label class="form-check-label" for="stack"> Stack Bars </label>
+      </div>
     </div>
   </div>
 
@@ -31,6 +66,7 @@ import {
   D3Selection,
   makeColorScale,
 } from "@/utils";
+import { Tooltip } from "bootstrap";
 import * as d3 from "d3";
 import { defineComponent } from "vue";
 
@@ -45,6 +81,8 @@ export default defineComponent({
   data() {
     return {
       numFile: 30,
+      mirror: false,
+      stack: false,
     };
   },
 
@@ -91,9 +129,18 @@ export default defineComponent({
     numFile() {
       this.drawSimilarity();
     },
+    mirror() {
+      this.drawSimilarity();
+    },
   },
 
   mounted(): void {
+    const tooltipTriggerList = [].slice.call(
+      document.querySelectorAll('[data-bs-toggle="tooltip"]')
+    );
+    tooltipTriggerList.forEach(
+      (tooltipTriggerEl) => new Tooltip(tooltipTriggerEl)
+    );
     this.drawSimilarity();
   },
 
@@ -137,7 +184,8 @@ export default defineComponent({
       xScale: d3.ScaleLinear<number, number>,
       barColorScale: d3.ScaleLinear<string, string>,
       cls: string,
-      right = false
+      right = false,
+      secondary = false
     ): void {
       const fileToBugBars = d3Svg.selectAll(`path.${cls}`).data(data);
       fileToBugBars.exit().remove();
@@ -149,7 +197,7 @@ export default defineComponent({
         return (
           basePosition +
           yScale.padding() * (right ? 1 : -1) +
-          yScale.bandwidth() / (right ? 2 : -2)
+          yScale.bandwidth() / (secondary ? 2 : -2)
         );
       };
 
@@ -215,6 +263,8 @@ export default defineComponent({
           }
           return `translate(${translateX}px, 0)`;
         });
+      } else {
+        rectangles.style("transform", "none");
       }
     },
     _drawAxis: function (
@@ -271,7 +321,6 @@ export default defineComponent({
       d3Svg.style("height", `${size}px`).style("width", `${size}px`);
 
       const fileToBugYScale = this._makeYScale(size, this.fileToBugSimilarity);
-      const bugToFileYScale = this._makeYScale(size, this.bugToFileSimilarity);
 
       const fileToBugXScale = this._makeXScale(size, this.fileToBugSimilarity);
       const bugToFileXScale = this._makeXScale(size, this.bugToFileSimilarity);
@@ -292,6 +341,9 @@ export default defineComponent({
         fileToBugColorScale,
         "file-to-bug"
       );
+      this._drawAxis(d3Svg, fileToBugYScale, "file-to-bug");
+
+      const bugToFileYScale = this._makeYScale(size, this.bugToFileSimilarity);
       this._drawBars(
         d3Svg,
         this.bugToFileSimilarity,
@@ -299,9 +351,9 @@ export default defineComponent({
         bugToFileXScale,
         bugToFileColorScale,
         "bug-to-file",
+        this.mirror,
         true
       );
-      this._drawAxis(d3Svg, fileToBugYScale, "file-to-bug");
       this._drawAxis(
         d3Svg,
         bugToFileYScale,
