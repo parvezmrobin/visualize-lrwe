@@ -139,34 +139,82 @@ export default defineComponent({
       cls: string,
       right = false
     ): void {
-      const fileToBugBars = d3Svg.selectAll(`rect.${cls}`).data(data);
+      const fileToBugBars = d3Svg.selectAll(`path.${cls}`).data(data);
       fileToBugBars.exit().remove();
-      fileToBugBars.enter().append("rect").attr("class", `bar ${cls}`);
-      const rectangles = d3Svg
-        .selectAll<SVGRectElement, Datum>(`rect.bar.${cls}`)
-        .transition()
-        .attr("x", right ? 0 : this.margin.x)
-        .attr("y", (d) => {
-          const basePosition = yScale(d.filename) as number;
-          return (
-            basePosition +
-            yScale.padding() * (right ? 1 : -1) +
-            yScale.bandwidth() / (right ? 2 : -2)
+      fileToBugBars.enter().append("path").attr("class", `bar ${cls}`);
+      const curveRadius = yScale.bandwidth() / 3;
+
+      const getY = (d: Datum) => {
+        const basePosition = yScale(d.filename) as number;
+        return (
+          basePosition +
+          yScale.padding() * (right ? 1 : -1) +
+          yScale.bandwidth() / (right ? 2 : -2)
+        );
+      };
+
+      const makePath = (d: Datum) => {
+        const path = d3.path();
+        let x = this.margin.x;
+        let y = getY(d);
+        path.moveTo(x, y);
+
+        let width = xScale(d.similarity);
+        if (width < curveRadius) {
+          // prevent bar from going negative
+          width = curveRadius;
+        }
+
+        x += width - curveRadius;
+        path.lineTo(x, y);
+        y += yScale.bandwidth();
+        if (right) {
+          path.lineTo(x, y);
+        } else {
+          path.bezierCurveTo(
+            x + curveRadius * 1.25,
+            y - (yScale.bandwidth() * 3) / 4,
+            x + curveRadius * 1.25,
+            y - yScale.bandwidth() / 4,
+            x,
+            y
           );
-        })
-        .attr("width", (d) => xScale(d.similarity))
-        .attr("height", yScale.bandwidth)
-        .attr("rx", 2)
-        .attr("ry", 1)
+        }
+        x -= width - curveRadius;
+        path.lineTo(x, y);
+        y -= yScale.bandwidth();
+        if (right) {
+          path.bezierCurveTo(
+            x - curveRadius * 1.25,
+            y + (yScale.bandwidth() * 3) / 4,
+            x - curveRadius * 1.25,
+            y + yScale.bandwidth() / 4,
+            x,
+            y
+          );
+        } else {
+          path.closePath();
+        }
+
+        return path.toString();
+      };
+
+      const rectangles = d3Svg
+        .selectAll<SVGRectElement, Datum>(`path.bar.${cls}`)
+        .transition()
+        .attr("d", makePath)
         .style("fill", (d) => barColorScale(d.similarity));
 
       if (right) {
         const range = xScale.range()[1] - xScale.range()[0];
-        rectangles.style(
-          "transform",
-          (d) =>
-            `translate(${this.margin.x + range - xScale(d.similarity)}px, 0)`
-        );
+        rectangles.style("transform", (d) => {
+          const width = xScale(d.similarity);
+          let translateX = curveRadius + range - width;
+          if (width < curveRadius) {
+            translateX += width - curveRadius;
+          }
+          return `translate(${translateX}px, 0)`;
+        });
       }
     },
     _drawAxis: function (
