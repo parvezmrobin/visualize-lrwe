@@ -158,8 +158,11 @@ export default defineComponent({
       ]);
 
       type NullableNumber = number | undefined;
+      const lineFactory = d3
+        .line<[NullableNumber, NullableNumber]>()
+        .curve(d3.curveBumpX);
       const path = (d: Datum) => {
-        return d3.line<[NullableNumber, NullableNumber]>()([
+        return lineFactory([
           [xScale(groups[0]), yScales[0](d.bugReportToken)],
           [xScale(groups[1]), yScales[1](d.filename)],
         ]);
@@ -175,19 +178,25 @@ export default defineComponent({
         .append("path")
         .attr("class", "edge")
         .on("mouseover", (e, d) => {
+          const path = e.currentTarget as SVGPathElement;
+          path.style.stroke = "black";
+          const similarity = d.similarity.toFixed(3);
+          const edgeInfo = `<span class="text-white">Similarity of ‘${
+            d.bugReportToken
+          }’ and <code class="text-white">${
+            d.filename.split(/[\\/]/).slice(-1)[0]
+          }</code> is ${similarity}</span>`;
           tooltip
-            .html(
-              `<span class="text-white">Similarity of ‘${
-                d.bugReportToken
-              }’ and <code class="text-white">${
-                d.filename.split(/[\\/]/).slice(-1)[0]
-              }</code> is ${d.similarity.toFixed(3)}</span>`
-            )
+            .html(edgeInfo)
             .style("visibility", "visible")
             .style("background-color", edgeColorScale(d.similarity));
         })
         .on("mousemove", moveTooltip)
-        .on("mouseout", hideTooltip);
+        .on("mouseout", (e, d) => {
+          const path = e.currentTarget as SVGPathElement;
+          path.style.stroke = edgeColorScale(d.similarity);
+          hideTooltip();
+        });
 
       this.d3Svg
         .selectAll<SVGPathElement, Datum>("path.edge")
