@@ -19,26 +19,22 @@
 
   <div v-show="selectedFile" style="position: relative">
     <svg class="border border-info rounded" ref="svg">
-      <g id="legend">
-        <rect x="10" y="10" width="5" height="5" :fill="Colors.Vermilion" />
-        <text x="20" y="18" :fill="Colors.Vermilion">Maximum</text>
-        <rect x="10" y="30" width="5" height="5" :fill="Colors.Blue" />
-        <text x="20" y="38" :fill="Colors.Blue">Minimum</text>
-      </g>
+      <Legend ref="legend" />
     </svg>
   </div>
 </template>
 
 <script lang="ts">
-import { Colors, computeSvgSize, D3Selection, makeColorScale } from "@/utils";
-import * as d3 from "d3";
-import { defineComponent, PropType } from "vue";
+import Legend from "@/components/bug-localization/Legend.vue";
 import SelectFile from "@/components/bug-localization/SelectFile.vue";
+import { computeSvgSize, D3Selection, makeColorScale } from "@/utils";
+import * as d3 from "d3";
+import { ComponentPublicInstance, defineComponent, PropType } from "vue";
 import { mapGetters, mapState } from "vuex";
 
 export default defineComponent({
   name: "WordToBugReportSimilarity",
-  components: { SelectFile },
+  components: { Legend, SelectFile },
   props: {
     fileColor: {
       type: Object as PropType<Record<string, string>>,
@@ -48,7 +44,6 @@ export default defineComponent({
   data() {
     return {
       numWords: 30,
-      Colors,
     };
   },
   computed: {
@@ -93,9 +88,9 @@ export default defineComponent({
       const size = computeSvgSize(d3Svg.node() as SVGElement);
       d3Svg.style("height", `${size}px`).style("width", `${size}px`);
 
-      d3Svg
-        .select("g#legend")
-        .attr("transform", `translate(${size - 100}, ${size - 50})`);
+      (
+        this.$refs.legend as ComponentPublicInstance<typeof Legend>
+      ).adjustPosition(size - 100, size - 50);
 
       const margin = {
         left: 100,
@@ -162,5 +157,3 @@ export default defineComponent({
   },
 });
 </script>
-
-<style scoped lang="scss"></style>

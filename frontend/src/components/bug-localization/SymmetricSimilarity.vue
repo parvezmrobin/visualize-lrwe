@@ -14,7 +14,9 @@
     </div>
   </div>
 
-  <svg class="border border-info rounded" ref="svg"></svg>
+  <svg class="border border-info rounded" ref="svg">
+    <Legend ref="legend" />
+  </svg>
 
   <div
     v-once
@@ -25,6 +27,7 @@
 </template>
 
 <script lang="ts">
+import Legend from "@/components/bug-localization/Legend.vue";
 import {
   addFilenameHoverSupport,
   computeSvgSize,
@@ -32,7 +35,7 @@ import {
   makeColorScale,
 } from "@/utils";
 import * as d3 from "d3";
-import { defineComponent } from "vue";
+import { ComponentPublicInstance, defineComponent } from "vue";
 
 type Datum = {
   filename: string;
@@ -47,7 +50,7 @@ const margin = {
 
 export default defineComponent({
   name: "SymmetricSimilarity",
-
+  components: { Legend },
   data() {
     return {
       numFile: 30,
@@ -84,6 +87,10 @@ export default defineComponent({
       const d3Svg = d3.select(this.$refs.svg as SVGElement);
       const size = computeSvgSize(d3Svg.node() as SVGElement);
       d3Svg.style("height", `${size}px`).style("width", `${size}px`);
+
+      (
+        this.$refs.legend as ComponentPublicInstance<typeof Legend>
+      ).adjustPosition(size - 100, size - 50);
 
       const similarities = this.similarity.map(({ similarity }) => similarity);
       const similarityDomain = [
