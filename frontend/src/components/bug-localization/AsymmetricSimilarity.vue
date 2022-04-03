@@ -1,5 +1,5 @@
 <template>
-  <div class="mb-3 row">
+  <div class="mb-3 row align-items-center">
     <label for="num-file" class="col-auto col-form-label">
       Number of Files to Show
     </label>
@@ -11,6 +11,23 @@
         id="num-file"
         class="form-control"
       />
+    </div>
+
+    <div
+      class="col-auto"
+      data-bs-toggle="tooltip"
+      data-bs-placement="bottom"
+      title="Show two asymmetric similarities for a file in opposite direction"
+    >
+      <div class="form-check form-check-inline form-switch">
+        <input
+          class="form-check-input"
+          type="checkbox"
+          id="mirror"
+          v-model="mirror"
+        />
+        <label class="form-check-label" for="mirror"> Mirror Bars </label>
+      </div>
     </div>
   </div>
 
@@ -31,6 +48,7 @@ import {
   D3Selection,
   makeColorScale,
 } from "@/utils";
+import { Tooltip } from "bootstrap";
 import * as d3 from "d3";
 import { defineComponent } from "vue";
 
@@ -45,6 +63,7 @@ export default defineComponent({
   data() {
     return {
       numFile: 30,
+      mirror: true,
     };
   },
 
@@ -91,9 +110,18 @@ export default defineComponent({
     numFile() {
       this.drawSimilarity();
     },
+    mirror() {
+      this.drawSimilarity();
+    },
   },
 
   mounted(): void {
+    const tooltipTriggerList = [].slice.call(
+      document.querySelectorAll('[data-bs-toggle="tooltip"]')
+    );
+    tooltipTriggerList.forEach((tooltipTriggerEl) =>
+      Tooltip.getOrCreateInstance(tooltipTriggerEl)
+    );
     this.drawSimilarity();
   },
 
@@ -137,20 +165,25 @@ export default defineComponent({
       xScale: d3.ScaleLinear<number, number>,
       barColorScale: d3.ScaleLinear<string, string>,
       cls: string,
+      orientation: "primary" | "secondary" | "only",
       right = false
     ): void {
-      const fileToBugBars = d3Svg.selectAll(`path.${cls}`).data(data);
-      fileToBugBars.exit().remove();
-      fileToBugBars.enter().append("path").attr("class", `bar ${cls}`);
-      const curveRadius = yScale.bandwidth() / 3;
+      const bars = d3Svg.selectAll(`path.${cls}`).data(data);
+      bars.exit().remove();
+      bars.enter().append("path").attr("class", `bar ${cls}`);
+
+      let height = yScale.bandwidth();
+      if (orientation === "only") {
+        height *= 2;
+      }
+      const curveRadius = height / 3;
 
       const getY = (d: Datum) => {
         const basePosition = yScale(d.filename) as number;
-        return (
-          basePosition +
-          yScale.padding() * (right ? 1 : -1) +
-          yScale.bandwidth() / (right ? 2 : -2)
-        );
+        const paddingOffset = yScale.padding() * (right ? 1 : -1);
+        const bandwidthOffset =
+          yScale.bandwidth() / (orientation === "secondary" ? 2 : -2);
+        return basePosition + paddingOffset + bandwidthOffset;
       };
 
       const makePath = (d: Datum) => {
@@ -167,28 +200,28 @@ export default defineComponent({
 
         x += width - curveRadius;
         path.lineTo(x, y);
-        y += yScale.bandwidth();
+        y += height;
         if (right) {
           path.lineTo(x, y);
         } else {
           path.bezierCurveTo(
             x + curveRadius * 1.25,
-            y - yScale.bandwidth() / 10,
+            y - height / 10,
             x + curveRadius * 1.25,
-            y - (yScale.bandwidth() * 9) / 10,
+            y - (height * 9) / 10,
             x,
             y
           );
         }
         x -= width - curveRadius;
         path.lineTo(x, y);
-        y -= yScale.bandwidth();
+        y -= height;
         if (right) {
           path.bezierCurveTo(
             x - curveRadius * 1.25,
-            y + yScale.bandwidth() / 10,
+            y + height / 10,
             x - curveRadius * 1.25,
-            y + (yScale.bandwidth() * 9) / 10,
+            y + (height * 9) / 10,
             x,
             y
           );
@@ -215,6 +248,8 @@ export default defineComponent({
           }
           return `translate(${translateX}px, 0)`;
         });
+      } else {
+        rectangles.style("transform", "none");
       }
     },
     _drawAxis: function (
@@ -271,7 +306,6 @@ export default defineComponent({
       d3Svg.style("height", `${size}px`).style("width", `${size}px`);
 
       const fileToBugYScale = this._makeYScale(size, this.fileToBugSimilarity);
-      const bugToFileYScale = this._makeYScale(size, this.bugToFileSimilarity);
 
       const fileToBugXScale = this._makeXScale(size, this.fileToBugSimilarity);
       const bugToFileXScale = this._makeXScale(size, this.bugToFileSimilarity);
@@ -290,8 +324,12 @@ export default defineComponent({
         fileToBugYScale,
         fileToBugXScale,
         fileToBugColorScale,
-        "file-to-bug"
+        "file-to-bug",
+        "primary"
       );
+      this._drawAxis(d3Svg, fileToBugYScale, "file-to-bug");
+
+      const bugToFileYScale = this._makeYScale(size, this.bugToFileSimilarity);
       this._drawBars(
         d3Svg,
         this.bugToFileSimilarity,
@@ -299,16 +337,20 @@ export default defineComponent({
         bugToFileXScale,
         bugToFileColorScale,
         "bug-to-file",
-        true
+        "secondary",
+        this.mirror
       );
-      this._drawAxis(d3Svg, fileToBugYScale, "file-to-bug");
-      this._drawAxis(
-        d3Svg,
-        bugToFileYScale,
-        "bug-to-file",
-        true,
-        fileToBugXScale.range()[1] - fileToBugXScale.range()[0]
-      );
+      if (this.mirror) {
+        this._drawAxis(
+          d3Svg,
+          bugToFileYScale,
+          "bug-to-file",
+          true,
+          fileToBugXScale.range()[1] - fileToBugXScale.range()[0]
+        );
+      } else {
+        d3Svg.select(".axis.bug-to-file").remove();
+      }
     },
   },
 });
