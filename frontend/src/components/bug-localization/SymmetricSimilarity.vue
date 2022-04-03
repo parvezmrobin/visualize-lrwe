@@ -112,19 +112,33 @@ export default defineComponent({
 
       const barColorScale = makeColorScale(similarityDomain);
 
-      const bars = d3Svg.selectAll("rect.bar").data(this.similarity);
+      const bars = d3Svg.selectAll("path.bar").data(this.similarity);
       bars.exit().remove();
-      bars.enter().append("rect").attr("class", "bar");
+      bars.enter().append("path").attr("class", "bar");
 
       d3Svg
-        .selectAll<SVGRectElement, Datum>("rect.bar")
+        .selectAll<SVGPathElement, Datum>("path.bar")
         .transition()
-        .attr("x", margin.left)
-        .attr("y", (d) => yScale(d.filename) as number)
-        .attr("width", (d) => xScale(d.similarity))
-        .attr("height", yScale.bandwidth)
-        .attr("rx", 5)
-        .attr("ry", 2)
+        .attr("d", (d) => {
+          const path = d3.path();
+          const curveRadius = yScale.bandwidth() / 3;
+          const x = margin.left;
+          const y = yScale(d.filename) as number;
+          path.moveTo(x, y);
+          const width = xScale(d.similarity);
+          path.lineTo(x + width, y);
+          path.bezierCurveTo(
+            x + width + curveRadius * 1.5,
+            y + (yScale.bandwidth() * 9) / 10,
+            x + width + curveRadius * 1.5,
+            y + yScale.bandwidth() / 10,
+            x + width,
+            y + yScale.bandwidth()
+          );
+          path.lineTo(x, y + yScale.bandwidth());
+          path.closePath();
+          return path.toString();
+        })
         .style("fill", (d) => barColorScale(d.similarity));
 
       let axis: D3Selection<SVGGElement> = d3Svg.select(".axis");
