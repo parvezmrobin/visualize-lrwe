@@ -173,9 +173,9 @@ export default defineComponent({
         } else {
           path.bezierCurveTo(
             x + curveRadius * 1.25,
-            y - (yScale.bandwidth() * 3) / 4,
+            y - yScale.bandwidth() / 10,
             x + curveRadius * 1.25,
-            y - yScale.bandwidth() / 4,
+            y - (yScale.bandwidth() * 9) / 10,
             x,
             y
           );
@@ -186,9 +186,9 @@ export default defineComponent({
         if (right) {
           path.bezierCurveTo(
             x - curveRadius * 1.25,
-            y + (yScale.bandwidth() * 3) / 4,
+            y + yScale.bandwidth() / 10,
             x - curveRadius * 1.25,
-            y + yScale.bandwidth() / 4,
+            y + (yScale.bandwidth() * 9) / 10,
             x,
             y
           );
