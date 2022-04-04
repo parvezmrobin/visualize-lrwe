@@ -11,9 +11,9 @@ from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from sklearn.metrics.pairwise import cosine_similarity
 
-from server.utils import get_embedding_index, checkout_to, \
-  get_java_files_from, get_embeddings, get_embedding_of_file, FileEmbeddings, \
-  chop_dict, first_value_of, first_key_of, EMBEDDING_DIMENSION
+from server.utils import EMBEDDING_DIMENSION, FileEmbeddings, checkout_to, \
+  chop_dict, first_key_of, first_value_of, get_embedding_index, \
+  get_embedding_of_file, get_embeddings, get_java_files_from
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 assert os.getcwd().endswith('backend')
@@ -151,37 +151,18 @@ def get_word_similarities(bug_id):
     file_embeddings[_k].shape[0],
   )
 
-  # ignoring words that had a zero similarity with the target document,
-  # i.e. words that either do not have a word embedding, or that do not
-  # appear in the target document.
-  embedding_words = set(embedding_index.keys())
-  known_bug_report_tokens = set(token for token in bug_report_tokens
-                                if token in embedding_words)
-  common_words_count_of: Dict[str, float] = {}
-  for filename, file_tokens in file_tokens_of.items():
-    common_words = tuple(token for token in known_bug_report_tokens
-                         if token in file_tokens)
-    # using Laplace smoothing
-    common_words_count_of[filename] = len(common_words) + 1
-
   bug_to_file_similarity: Dict[str, np.ndarray] = {
-    fn: np.sum(bug_word_to_file_sim) / common_words_count_of[fn]
-    for fn, bug_word_to_file_sim in bug_word_to_file_similarities.items()
+    filename: (bug_word_to_file_sim.sum()
+               # divide by the number of non-zero similarities
+               / bug_word_to_file_sim.astype('bool').sum())
+    for filename, bug_word_to_file_sim in bug_word_to_file_similarities.items()
   }
 
-  # List of common words will be the same. Use the following
-  # Ven Diagram as proof.
-  #                        ┏━━━━━━━━━━━━┓
-  #                        ┃            ┃←───── embedding_words
-  #                    ┌───┃────▅▅▅▅════┃═══╗
-  #                    │   ┃    ████    │   ║
-  # bug_report_tokens →│   ┗━━━━▀▀▀▀━━━━┛   ║← file_tokens
-  #                    │        ║  │        ║
-  #                    └────────╚══╧════════╝
-  # The blocked part is common words
   file_to_bug_similarity: Dict[str, np.ndarray] = {
-    fn: np.sum(file_word_to_bug_sim) / common_words_count_of[fn]
-    for fn, file_word_to_bug_sim in file_word_to_bug_similarities.items()
+    filename: (file_word_to_bug_sim.sum()
+               # divide by the number of non-zero similarities
+               / file_word_to_bug_sim.astype('bool').sum())
+    for filename, file_word_to_bug_sim in file_word_to_bug_similarities.items()
   }
 
   symmetric_similarity: Dict[str, np.ndarray] = {
