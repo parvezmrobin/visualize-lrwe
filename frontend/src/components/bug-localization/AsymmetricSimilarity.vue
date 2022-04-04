@@ -360,21 +360,17 @@ export default defineComponent({
         ...this.fileToBugSimilarity,
         ...this.bugToFileSimilarity,
       ]);
-      const fileToBugColorScale = this._makeColorScale(
-        size,
-        this.fileToBugSimilarity
-      );
-      const bugToFileColorScale = this._makeColorScale(
-        size,
-        this.bugToFileSimilarity
-      );
+      const colorScale = this._makeColorScale(size, [
+        ...this.fileToBugSimilarity,
+        ...this.bugToFileSimilarity,
+      ]);
 
       this._drawBars(
         d3Svg,
         this.fileToBugSimilarity,
         yScale,
         xScale,
-        fileToBugColorScale,
+        colorScale,
         "file-to-bug",
         "primary"
       );
@@ -385,7 +381,7 @@ export default defineComponent({
         this.bugToFileSimilarity,
         yScale,
         xScale,
-        bugToFileColorScale,
+        colorScale,
         "bug-to-file",
         "secondary",
         this.mirror
