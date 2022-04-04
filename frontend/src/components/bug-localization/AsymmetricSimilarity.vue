@@ -14,6 +14,7 @@
     </div>
 
     <div
+      v-show="!stack"
       class="col-auto"
       data-bs-toggle="tooltip"
       data-bs-placement="bottom"
@@ -29,9 +30,34 @@
         <label class="form-check-label" for="mirror"> Mirror Bars </label>
       </div>
     </div>
+
+    <div
+      class="col-auto"
+      data-bs-toggle="tooltip"
+      data-bs-placement="bottom"
+      title="Stack two asymmetric similarities on top of each other"
+    >
+      <div class="form-check form-check-inline form-switch">
+        <input
+          class="form-check-input"
+          type="checkbox"
+          id="stack"
+          v-model="stack"
+        />
+        <label class="form-check-label" for="stack"> Stack Bars </label>
+      </div>
+    </div>
   </div>
 
-  <svg class="border border-info rounded" ref="svg"></svg>
+  <svg v-show="!stack" ref="svg" class="border border-info rounded"></svg>
+  <svg v-show="stack" ref="stakedSvg" class="border border-info rounded">
+    <g id="legend" ref="legend">
+      <rect x="10" y="10" width="5" height="5" :fill="Colors.Vermilion" />
+      <text x="20" y="18" :fill="Colors.Vermilion">File To Bug Similarity</text>
+      <rect x="10" y="30" width="5" height="5" :fill="Colors.Blue" />
+      <text x="20" y="38" :fill="Colors.Blue">Bug To File Similarity</text>
+    </g>
+  </svg>
 
   <div
     v-once
@@ -44,6 +70,7 @@
 <script lang="ts">
 import {
   addFilenameHoverSupport,
+  Colors,
   computeSvgSize,
   D3Selection,
   makeColorScale,
@@ -64,6 +91,8 @@ export default defineComponent({
     return {
       numFile: 30,
       mirror: true,
+      stack: false,
+      Colors,
     };
   },
 
@@ -113,6 +142,9 @@ export default defineComponent({
     mirror() {
       this.drawSimilarity();
     },
+    stack() {
+      this.drawSimilarity();
+    },
   },
 
   mounted(): void {
@@ -133,7 +165,7 @@ export default defineComponent({
       const similarities = similarityObject.map(({ similarity }) => similarity);
       return d3
         .scaleLinear()
-        .domain([Math.min(...similarities), Math.max(...similarities)])
+        .domain([0, Math.max(...similarities)])
         .range([0, size - 2 * this.margin.x]);
     },
     _makeColorScale: function (
@@ -255,18 +287,20 @@ export default defineComponent({
     _drawAxis: function (
       d3Svg: D3Selection<SVGElement>,
       yScale: d3.ScalePoint<string>,
-      cls: string,
+      cls?: string,
       right = false,
       xRange = 0
     ): void {
-      let yAxis: D3Selection<SVGGElement> = d3Svg.select(`.axis.${cls}`);
+      let yAxis: D3Selection<SVGGElement> = d3Svg.select(
+        `.axis${cls ? `.${cls}` : ""}`
+      );
       const getFilenameFromDatum = (d: string) => {
         return d.replaceAll("\\", "/").split("/").slice(-1)[0];
       };
       if (yAxis.empty()) {
         yAxis = d3Svg
           .append("g")
-          .attr("class", `axis ${cls}`)
+          .attr("class", `axis${cls ? ` ${cls}` : ""}`)
           .attr(
             "transform",
             `translate(${this.margin.x + (right ? xRange : 0)}, 0)`
@@ -286,6 +320,10 @@ export default defineComponent({
       }
 
       addFilenameHoverSupport(yAxis, this.$refs.tooltip);
+
+      if (!cls) {
+        return;
+      }
 
       let title = yAxis.select<SVGTextElement>("text.title");
       if (title.empty()) {
@@ -311,15 +349,17 @@ export default defineComponent({
           );
       }
     },
-    drawSimilarity() {
+    _drawPairedSimilarity() {
       const d3Svg = d3.select(this.$refs.svg as SVGElement);
       const size = computeSvgSize(d3Svg.node() as SVGElement);
       d3Svg.style("height", `${size}px`).style("width", `${size}px`);
 
-      const fileToBugYScale = this._makeYScale(size, this.fileToBugSimilarity);
+      const yScale = this._makeYScale(size, this.fileToBugSimilarity);
 
-      const fileToBugXScale = this._makeXScale(size, this.fileToBugSimilarity);
-      const bugToFileXScale = this._makeXScale(size, this.bugToFileSimilarity);
+      const xScale = this._makeXScale(size, [
+        ...this.fileToBugSimilarity,
+        ...this.bugToFileSimilarity,
+      ]);
       const fileToBugColorScale = this._makeColorScale(
         size,
         this.fileToBugSimilarity
@@ -332,20 +372,19 @@ export default defineComponent({
       this._drawBars(
         d3Svg,
         this.fileToBugSimilarity,
-        fileToBugYScale,
-        fileToBugXScale,
+        yScale,
+        xScale,
         fileToBugColorScale,
         "file-to-bug",
         "primary"
       );
-      this._drawAxis(d3Svg, fileToBugYScale, "file-to-bug");
+      this._drawAxis(d3Svg, yScale, "file-to-bug");
 
-      const bugToFileYScale = this._makeYScale(size, this.bugToFileSimilarity);
       this._drawBars(
         d3Svg,
         this.bugToFileSimilarity,
-        bugToFileYScale,
-        bugToFileXScale,
+        yScale,
+        xScale,
         bugToFileColorScale,
         "bug-to-file",
         "secondary",
@@ -354,13 +393,66 @@ export default defineComponent({
       if (this.mirror) {
         this._drawAxis(
           d3Svg,
-          bugToFileYScale,
+          yScale,
           "bug-to-file",
           true,
-          fileToBugXScale.range()[1] - fileToBugXScale.range()[0]
+          xScale.range()[1] - xScale.range()[0]
         );
       } else {
         d3Svg.select(".axis.bug-to-file").remove();
+      }
+    },
+    _drawStackedSimilarity() {
+      const d3Svg = d3.select(this.$refs.stakedSvg as SVGElement);
+      const size = computeSvgSize(d3Svg.node() as SVGElement);
+      d3Svg.style("height", `${size}px`).style("width", `${size}px`);
+
+      d3.select(this.$refs.legend as SVGGElement).attr(
+        "transform",
+        `translate(${size - 175}, ${size - 50})`
+      );
+
+      const yScale = this._makeYScale(size, this.fileToBugSimilarity);
+
+      const joinedSimilarity: Datum[] = this.fileToBugSimilarity.map(
+        ({ filename, similarity }, i) => ({
+          filename,
+          similarity: similarity + this.bugToFileSimilarity[i].similarity,
+        })
+      );
+      const xScale = this._makeXScale(size, joinedSimilarity);
+      const vermilionScale = d3
+        .scaleLinear<string>()
+        .range([Colors.Vermilion, Colors.Vermilion]);
+      const blueScale = d3
+        .scaleLinear<string>()
+        .range([Colors.Blue, Colors.Blue]);
+
+      this._drawBars(
+        d3Svg,
+        joinedSimilarity,
+        yScale,
+        xScale,
+        vermilionScale,
+        "file-to-bug",
+        "only"
+      );
+      this._drawBars(
+        d3Svg,
+        this.bugToFileSimilarity,
+        yScale,
+        xScale,
+        blueScale,
+        "bug-to-file",
+        "only"
+      );
+      this._drawAxis(d3Svg, yScale);
+    },
+    drawSimilarity() {
+      if (this.stack) {
+        this._drawStackedSimilarity();
+      } else {
+        this._drawPairedSimilarity();
       }
     },
   },
