@@ -29,7 +29,7 @@ import Legend from "@/components/bug-localization/Legend.vue";
 import SelectFile from "@/components/bug-localization/SelectFile.vue";
 import { computeSvgSize, D3Selection, makeColorScale } from "@/utils";
 import * as d3 from "d3";
-import { ComponentPublicInstance, defineComponent, PropType } from "vue";
+import { defineComponent, PropType } from "vue";
 import { mapGetters, mapState } from "vuex";
 
 export default defineComponent({
@@ -88,9 +88,10 @@ export default defineComponent({
       const size = computeSvgSize(d3Svg.node() as SVGElement);
       d3Svg.style("height", `${size}px`).style("width", `${size}px`);
 
-      (
-        this.$refs.legend as ComponentPublicInstance<typeof Legend>
-      ).adjustPosition(size - 100, size - 50);
+      (this.$refs.legend as InstanceType<typeof Legend>).adjustPosition(
+        size - 100,
+        size - 50
+      );
 
       const margin = {
         left: 100,

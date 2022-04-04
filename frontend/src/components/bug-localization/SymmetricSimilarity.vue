@@ -35,7 +35,7 @@ import {
   makeColorScale,
 } from "@/utils";
 import * as d3 from "d3";
-import { ComponentPublicInstance, defineComponent } from "vue";
+import { defineComponent } from "vue";
 
 type Datum = {
   filename: string;
@@ -88,9 +88,10 @@ export default defineComponent({
       const size = computeSvgSize(d3Svg.node() as SVGElement);
       d3Svg.style("height", `${size}px`).style("width", `${size}px`);
 
-      (
-        this.$refs.legend as ComponentPublicInstance<typeof Legend>
-      ).adjustPosition(size - 100, size - 50);
+      (this.$refs.legend as InstanceType<typeof Legend>).adjustPosition(
+        size - 100,
+        size - 50
+      );
 
       const similarities = this.similarity.map(({ similarity }) => similarity);
       const similarityDomain = [
