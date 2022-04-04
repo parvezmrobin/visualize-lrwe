@@ -47,7 +47,7 @@ file_embeddings, file_tokens_of = get_embeddings(
   file_map, embedding_index, return_tokens=True,
 )
 
-print('Bootstrapped.')
+print(f'Bootstrapped with {len(file_embeddings)} files')
 
 
 @app.route('/bug', methods=['GET'])
