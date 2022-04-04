@@ -111,7 +111,7 @@ def get_word_similarities(bug_id):
     bug_report += ('\n' + bug_row.description)
 
   # TODO: update file cache
-  checkout_to(commit, TOMCAT_REPO_DIR)
+  # checkout_to(commit, TOMCAT_REPO_DIR)
 
   # generate tokens and embeddings
   bug_report_embedding: np.ndarray
